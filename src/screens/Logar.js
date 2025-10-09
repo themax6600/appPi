@@ -1,8 +1,8 @@
 import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput } from 'react-native'
 
-import sesc from '../../assets/img/sesc-senac-01 1.png'
+import sesc from '../../assets/img/sescsenac.png'
 
-export default function Initial({ navigation }) {
+export default function Logar({ navigation }) {
     return (
         <View style={styles.container}>
             <View style={styles.imgCampo}>
@@ -10,12 +10,10 @@ export default function Initial({ navigation }) {
                 <Text style={styles.titulo}>Lanchonete Sesc Senac</Text>
             </View>
             <View style={styles.inputs}>
-                <Text>Nome</Text>
-                <TextInput placeholder='Nome' />
-                <Text>E-mail</Text>
-                <TextInput placeholder='Ex.: aluno@email.com' />
-                <Text>Senha</Text>
-                <TextInput placeholder='******' />
+                <Text style={styles.text1}>E-mail</Text>
+                <TextInput placeholder='Ex.: aluno@email.com' style={styles.input}/>
+                <Text style={styles.text1}>Senha</Text>
+                <TextInput placeholder='******' style={styles.input} />
             </View>
             <View style={styles.btns}>
                 <TouchableOpacity
@@ -33,7 +31,7 @@ const styles = StyleSheet.create({
     container: {
         backgroundColor: '#002D85',
         flex: 1,
-        justifyContent: 'space-between',
+        justifyContent: 'space-around',
     },
     img: {
         backgroundColor: 'white',
@@ -60,11 +58,27 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         padding: 10,
         marginTop: 25,
+        marginBottom: 150,
     },
     text: {
         textAlign: 'center',
         fontSize: 22,
         color: "#111",
         fontWeight: 'bold',
+    },
+    text1:{
+        color: 'white',
+        fontSize: 30,
+    },
+    input:{
+        backgroundColor: 'white',
+        borderRadius: 10,
+        padding: 10,
+        height: 50,
+        marginBottom: 15,
+    },
+    inputs:{
+        marginLeft: 30,
+        marginRight: 30,
     },
 });

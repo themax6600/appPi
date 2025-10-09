@@ -1,7 +1,7 @@
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native'
 import React from 'react'
 
-import sesc from '../../assets/img/sesc-senac-01 1.png'
+import sesc from '../../assets/img/sescsenac.png'
 import pao from '../../assets/img/pao.png'
 
 export default function Initial({ navigation }) {

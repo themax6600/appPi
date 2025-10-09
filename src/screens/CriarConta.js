@@ -1,8 +1,8 @@
 import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput } from 'react-native'
 
-import sesc from '../../assets/img/sesc-senac-01 1.png'
+import sesc from '../../assets/img/sescsenac.png'
 
-export default function Initial({ navigation }) {
+export default function CriarConta({ navigation }) {
     return (
         <View style={styles.container}>
             <View style={styles.imgCampo}>
