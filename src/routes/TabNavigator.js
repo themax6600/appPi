@@ -1,7 +1,8 @@
-import { Image } from "react-native";
+import { Image, View } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
-import SescSenac from "../../assets/img/sescsenac.png";
+import sesc from "../../assets/img/sesc.png"
+import senac from "../../assets/img/senac.png";
 
 import Home from '../screens/Home';
 import Notificacoes from "../screens/Notificacoes";
@@ -15,13 +16,22 @@ export default function TabNavigator() {
         <tab.Navigator
             screenOptions={{
                 tabBarStyle: {
-                    backgroundColor: '#93BEFF',
+                    backgroundColor: '#E8E8E8',
                 },
                 headerStyle: {
-                    backgroundColor: '#93BEFF',
+                    backgroundColor: '#004C99',
                 },
                 headerTitle: () => (
-                    <Image source={SescSenac} style={{ width: 202, height: 77, marginBottom: 30, }} />
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Image
+                            source={sesc}
+                            style={{ width: 80, height: 50, resizeMode: 'contain', marginRight: 10 }}
+                        />
+                        <Image
+                            source={senac}
+                            style={{ width: 80, height: 50, resizeMode: 'contain' }}
+                        />
+                    </View>
                 ),
                 headerTitleAlign: 'center',
             }}
@@ -33,7 +43,7 @@ export default function TabNavigator() {
                     tabBarIcon: () => (
                         <Image
                             style={{ width: 24, height: 24 }}
-                            source={require('../../assets/img/home.webp')}
+                            source={require('../../assets/img/home.png')}
                         />
                     ),
                 }}
@@ -44,7 +54,7 @@ export default function TabNavigator() {
                     tabBarIcon: () => (
                         <Image
                             style={{ width: 24, height: 24 }}
-                            source={require('../../assets/img/3.png')}
+                            source={require('../../assets/img/contato1.png')}
                         />
                     ),
                 }}
@@ -55,7 +65,7 @@ export default function TabNavigator() {
                     tabBarIcon: () => (
                         <Image
                             style={{ width: 24, height: 24 }}
-                            source={require('../../assets/img/2.png')}
+                            source={require('../../assets/img/notificacao.png')}
                         />
                     ),
                 }}
@@ -66,7 +76,7 @@ export default function TabNavigator() {
                     tabBarIcon: () => (
                         <Image
                             style={{ width: 24, height: 24 }}
-                            source={require('../../assets/img/1.png')}
+                            source={require('../../assets/img/perfil1.png')}
                         />
                     ),
                 }}

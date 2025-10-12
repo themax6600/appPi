@@ -1,35 +1,57 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 
-import agenda from '../../assets/img/agenda.png'
-import menu from '../../assets/img/menu.png'
+import agenda from "../../assets/img/agenda.png";
+import menu from "../../assets/img/menu.png";
 
 export default function Home() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.text1}>Seu saldo <Text style={styles.text2}>R$0,00</Text></Text>
-        <TouchableOpacity
-          style={styles.btn1}
-        >
+        <Text style={styles.text1}>
+          Seu saldo <Text style={styles.text2}>R$0,00</Text>
+        </Text>
+        <TouchableOpacity style={styles.btn1}>
           <Text style={styles.text3}>Inserir saldo</Text>
         </TouchableOpacity>
       </View>
       <View>
-        <View style={styles.bg_text}>
-          <Text style={styles.text3}>Seja bem vindo a lanchonete do Sesc e Senac</Text>
-        </View>
+        <LinearGradient
+          colors={["#80BBFF", "#004C99"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.bg_text}
+        >
+          <Text style={styles.text3}>
+            Seja bem-vindo à lanchonete do Sesc e Senac
+          </Text>
+        </LinearGradient>
         <View style={styles.card}>
-          <Image source={menu} style={styles.imgMenu} />
+          <View style={styles.bgMenu}>
+            <Image source={menu} style={styles.imgMenu} />
+          </View>
           <View style={styles.col}>
-            <Text style={styles.text1}>Veja nosso menu de lanches e bebidas!</Text>
-            <TouchableOpacity
-              style={styles.btn2}
-            >
+            <Text style={styles.text1}>
+              Veja nosso menu de lanches e bebidas!
+            </Text>
+            <TouchableOpacity style={styles.btn2}>
               <Text style={styles.text}>SESC</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.btn2}
-            >
+            <TouchableOpacity style={styles.btn2}>
+              <Text style={styles.text}>SENAC</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View style={styles.card}>
+          <View style={styles.bgMenu}>
+            <Image source={agenda} style={styles.imgMenu} />
+          </View>
+          <View style={styles.col}>
+            <Text style={styles.text1}>Veja aqui seus pedidos pendentes e pedidos passados.</Text>
+            <TouchableOpacity style={styles.btn2}>
+              <Text style={styles.text}>SESC</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.btn2}>
               <Text style={styles.text}>SENAC</Text>
             </TouchableOpacity>
           </View>
@@ -37,60 +59,67 @@ export default function Home() {
       </View>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#002D85',
+    backgroundColor: "#ffffffff"
   },
   header: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
     padding: 7,
   },
   btn1: {
-    backgroundColor: '#FFC400',
+    backgroundColor: "#FFC400",
     borderRadius: 15,
-    padding: 5,
+    padding: 5
   },
   btn2: {
-    backgroundColor: '#FFC400',
+    backgroundColor: "#FFC400",
     borderRadius: 15,
     padding: 2,
     width: 200,
     margin: 5,
   },
-  text:{
-    textAlign: 'center',
-    fontSize: 25, 
+  text: {
+    textAlign: "center",
+    fontSize: 25
   },
   text1: {
-    color: 'white',
-    fontSize: 25,
+    color: "#000000ff",
+    fontSize: 25
   },
   text2: {
-    color: '#FFC400',
+    color: "#FFC400"
   },
   text3: {
     fontSize: 25,
-    textAlign: 'center',
+    textAlign: "center",
+    color: "#ffffffff",
+    padding: 4,
   },
   bg_text: {
-    backgroundColor: 'white',
     borderRadius: 20,
     marginTop: 50,
     margin: 10,
   },
   card: {
-    display: 'flex',
-    flexDirection: 'row',
+    display: "flex",
+    flexDirection: "row"
   },
-  col:{
-    width: 200,
+  col: {
+    width: 200
   },
-  imgMenu:{
-    backgroundColor: '#111',
+  bgMenu:{
+    backgroundColor: "#004C99",
+    borderRadius: 20,
+    padding: 5,
   },
-})
+  imgMenu: {
+    width: 100,
+    height: 100,
+  },
+});
