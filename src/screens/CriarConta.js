@@ -1,8 +1,31 @@
-import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput } from 'react-native'
+import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput, Button } from 'react-native'
 
+import { supabase } from '../../utils/supabase';
 import sesc from '../../assets/img/sescsenac.png'
+import { useState } from 'react'
 
 export default function CriarConta({ navigation }) {
+    const [email, setEmail] = useState('')
+    const [senha, setSenha] = useState('')
+    const [nome, setNome] = useState(false)
+    const [loading, setLoading] = useState(false)
+
+    
+    async function signUpWithEmail() {
+        setLoading(true)
+        const {
+            data: { session },
+            error,
+        } = await supabase.auth.signUp({
+            email: email,
+            senha: senha,
+            nome: nome,
+        })
+
+        if (error) Alert.alert(error.message)
+        if (!session) Alert.alert('Please check your inbox for email verification!')
+        setLoading(false)
+    }
     return (
         <View style={styles.container}>
             <View style={styles.imgCampo}>
@@ -11,13 +34,30 @@ export default function CriarConta({ navigation }) {
             </View>
             <View style={styles.inputs}>
                 <Text style={styles.text1}>Nome</Text>
-                <TextInput placeholder='Nome' style={styles.input}/>
+                <TextInput
+                    placeholder='Nome'
+                    onChangeText={setNome}
+                    value={nome}
+                    style={styles.input}
+                />
                 <Text style={styles.text1}>E-mail</Text>
-                <TextInput placeholder='Ex.: aluno@email.com' style={styles.input}/>
+                <TextInput
+                    placeholder='Ex.: aluno@email.com'
+                    onChangeText={setEmail}
+                    value={email}
+                    keyboardType="email-address"
+                    style={styles.input}
+                />
                 <Text style={styles.text1}>Senha</Text>
-                <TextInput placeholder='******' style={styles.input}/>
+                <TextInput
+                    placeholder='******'
+                    secureTextEntry
+                    onChangeText={setSenha}
+                    value={senha}
+                    style={styles.input} />
             </View>
             <View style={styles.btns}>
+                <Button title="Criar Conta" disabled={loading} onPress={() => signUpWithEmail()} />
                 <TouchableOpacity
                     style={styles.btn1}
                     onPress={() => navigation.navigate("TabNavigator")}
@@ -45,23 +85,23 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: 100,
     },
-    inputs:{
+    inputs: {
         marginLeft: 30,
         marginRight: 30,
     },
-    input:{
+    input: {
         backgroundColor: 'white',
         borderRadius: 10,
         padding: 10,
         height: 50,
         marginBottom: 15,
     },
-    titulo:{
+    titulo: {
         color: 'white',
         fontSize: 30,
         marginTop: 10,
     },
-    btns:{
+    btns: {
         display: 'flex',
         alignItems: 'center',
     },
@@ -79,7 +119,7 @@ const styles = StyleSheet.create({
         color: "#111",
         fontWeight: 'bold',
     },
-    text1:{
+    text1: {
         color: 'white',
         fontSize: 30,
     }

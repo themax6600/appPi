@@ -42,7 +42,7 @@ export default function TabNavigator() {
                     tabBarActiveTintColor: '#898875',
                     tabBarIcon: () => (
                         <Image
-                            style={{ width: 24, height: 24 }}
+                            style={{ width: 40, height: 40 }}
                             source={require('../../assets/img/home.png')}
                         />
                     ),
@@ -53,7 +53,7 @@ export default function TabNavigator() {
                     tabBarActiveTintColor: '#898875',
                     tabBarIcon: () => (
                         <Image
-                            style={{ width: 24, height: 24 }}
+                            style={{ width: 40, height: 40 }}
                             source={require('../../assets/img/contato1.png')}
                         />
                     ),
@@ -64,7 +64,7 @@ export default function TabNavigator() {
                     tabBarActiveTintColor: '#898875',
                     tabBarIcon: () => (
                         <Image
-                            style={{ width: 24, height: 24 }}
+                            style={{ width: 40, height: 40 }}
                             source={require('../../assets/img/notificacao.png')}
                         />
                     ),
@@ -75,7 +75,7 @@ export default function TabNavigator() {
                     tabBarActiveTintColor: '#898875',
                     tabBarIcon: () => (
                         <Image
-                            style={{ width: 24, height: 24 }}
+                            style={{ width: 40, height: 40 }}
                             source={require('../../assets/img/perfil1.png')}
                         />
                     ),

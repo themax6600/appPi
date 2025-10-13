@@ -3,6 +3,22 @@ import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput } from 'reac
 import sesc from '../../assets/img/sescsenac.png'
 
 export default function Logar({ navigation }) {
+    const [email, setEmail] = useState('');
+    const [senha, setSenha] = useState('');
+
+    const handleLogin = async () => {
+        const { error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: senha,
+        });
+
+        if (error) {
+            Alert.alert('Erro ao logar', error.message);
+        } else {
+            Alert.alert('Logado com sucesso!');
+        }
+    };
+
     return (
         <View style={styles.container}>
             <View style={styles.imgCampo}>
@@ -11,9 +27,12 @@ export default function Logar({ navigation }) {
             </View>
             <View style={styles.inputs}>
                 <Text style={styles.text1}>E-mail</Text>
-                <TextInput placeholder='Ex.: aluno@email.com' style={styles.input}/>
+                <TextInput placeholder='Ex.: aluno@email.com' onChangeText={setEmail}
+                    value={email} style={styles.input} />
                 <Text style={styles.text1}>Senha</Text>
-                <TextInput placeholder='******' style={styles.input} />
+                <TextInput placeholder='******' secureTextEntry
+                    onChangeText={setSenha}
+                    value={senha} style={styles.input} />
             </View>
             <View style={styles.btns}>
                 <TouchableOpacity
@@ -43,12 +62,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: 100,
     },
-    titulo:{
+    titulo: {
         color: 'white',
         fontSize: 30,
         marginTop: 10,
     },
-    btns:{
+    btns: {
         display: 'flex',
         alignItems: 'center',
     },
@@ -66,18 +85,18 @@ const styles = StyleSheet.create({
         color: "#111",
         fontWeight: 'bold',
     },
-    text1:{
+    text1: {
         color: 'white',
         fontSize: 30,
     },
-    input:{
+    input: {
         backgroundColor: 'white',
         borderRadius: 10,
         padding: 10,
         height: 50,
         marginBottom: 15,
     },
-    inputs:{
+    inputs: {
         marginLeft: 30,
         marginRight: 30,
     },

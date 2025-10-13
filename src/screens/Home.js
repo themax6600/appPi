@@ -15,7 +15,7 @@ export default function Home() {
           <Text style={styles.text3}>Inserir saldo</Text>
         </TouchableOpacity>
       </View>
-      <View>
+      <View style={styles.section}>
         <LinearGradient
           colors={["#80BBFF", "#004C99"]}
           start={{ x: 0, y: 0 }}
@@ -34,12 +34,14 @@ export default function Home() {
             <Text style={styles.text1}>
               Veja nosso menu de lanches e bebidas!
             </Text>
+            <View>
             <TouchableOpacity style={styles.btn2}>
               <Text style={styles.text}>SESC</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.btn2}>
               <Text style={styles.text}>SENAC</Text>
             </TouchableOpacity>
+            </View>
           </View>
         </View>
         <View style={styles.card}>
@@ -48,12 +50,6 @@ export default function Home() {
           </View>
           <View style={styles.col}>
             <Text style={styles.text1}>Veja aqui seus pedidos pendentes e pedidos passados.</Text>
-            <TouchableOpacity style={styles.btn2}>
-              <Text style={styles.text}>SESC</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.btn2}>
-              <Text style={styles.text}>SENAC</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -82,7 +78,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     padding: 2,
     width: 200,
-    margin: 5,
+    marginTop: 5,
   },
   text: {
     textAlign: "center",
@@ -104,22 +100,25 @@ const styles = StyleSheet.create({
   bg_text: {
     borderRadius: 20,
     marginTop: 50,
-    margin: 10,
   },
   card: {
     display: "flex",
-    flexDirection: "row"
+    flexDirection: "row",
+    width: 10,
+    marginTop: 50,
   },
   col: {
-    width: 200
+    width: 200,
+    display: 'flex',
+    justifyContent: 'space-between',
+    marginLeft: 10,
   },
   bgMenu:{
     backgroundColor: "#004C99",
     borderRadius: 20,
     padding: 5,
   },
-  imgMenu: {
-    width: 100,
-    height: 100,
+  section:{
+    margin: 10,
   },
 });
