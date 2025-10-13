@@ -1,4 +1,4 @@
-import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput, Button } from 'react-native'
+import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native'
 
 import { supabase } from '../../utils/supabase';
 import sesc from '../../assets/img/sescsenac.png'
@@ -6,26 +6,27 @@ import { useState } from 'react'
 
 export default function CriarConta({ navigation }) {
     const [email, setEmail] = useState('')
-    const [senha, setSenha] = useState('')
-    const [nome, setNome] = useState(false)
+    const [password, setPassword] = useState('')
+    const [nome, setNome] = useState('')
     const [loading, setLoading] = useState(false)
 
-    
     async function signUpWithEmail() {
         setLoading(true)
-        const {
-            data: { session },
-            error,
-        } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
             email: email,
-            senha: senha,
-            nome: nome,
+            password: password,
         })
 
-        if (error) Alert.alert(error.message)
-        if (!session) Alert.alert('Please check your inbox for email verification!')
+        if (error) {
+            Alert.alert('Erro', error.message)
+        } else {
+            Alert.alert('Sucesso', 'Verifique seu e-mail para confirmar sua conta.')
+            navigation.navigate('Logar')
+        }
+
         setLoading(false)
     }
+
     return (
         <View style={styles.container}>
             <View style={styles.imgCampo}>
@@ -52,15 +53,16 @@ export default function CriarConta({ navigation }) {
                 <TextInput
                     placeholder='******'
                     secureTextEntry
-                    onChangeText={setSenha}
-                    value={senha}
-                    style={styles.input} />
+                    onChangeText={setPassword}
+                    value={password}
+                    style={styles.input}
+                />
             </View>
             <View style={styles.btns}>
-                <Button title="Criar Conta" disabled={loading} onPress={() => signUpWithEmail()} />
                 <TouchableOpacity
                     style={styles.btn1}
-                    onPress={() => navigation.navigate("TabNavigator")}
+                    disabled={loading}
+                    onPress={signUpWithEmail}
                 >
                     <Text style={styles.text}>Criar Conta</Text>
                 </TouchableOpacity>

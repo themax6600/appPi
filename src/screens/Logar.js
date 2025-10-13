@@ -3,22 +3,7 @@ import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput } from 'reac
 import sesc from '../../assets/img/sescsenac.png'
 
 export default function Logar({ navigation }) {
-    const [email, setEmail] = useState('');
-    const [senha, setSenha] = useState('');
-
-    const handleLogin = async () => {
-        const { error } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: senha,
-        });
-
-        if (error) {
-            Alert.alert('Erro ao logar', error.message);
-        } else {
-            Alert.alert('Logado com sucesso!');
-        }
-    };
-
+    
     return (
         <View style={styles.container}>
             <View style={styles.imgCampo}>
@@ -27,12 +12,10 @@ export default function Logar({ navigation }) {
             </View>
             <View style={styles.inputs}>
                 <Text style={styles.text1}>E-mail</Text>
-                <TextInput placeholder='Ex.: aluno@email.com' onChangeText={setEmail}
-                    value={email} style={styles.input} />
+                <TextInput placeholder='Ex.: aluno@email.com' style={styles.input} />
                 <Text style={styles.text1}>Senha</Text>
                 <TextInput placeholder='******' secureTextEntry
-                    onChangeText={setSenha}
-                    value={senha} style={styles.input} />
+                    />
             </View>
             <View style={styles.btns}>
                 <TouchableOpacity
