@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native
 
 export default function Contato() {
   return (
-    <View style={estilo.container}>
+    <View style={styles.container}>
       <Text>Contato</Text>
     </View>
   );

@@ -8,6 +8,7 @@ import Home from '../screens/Home';
 import Notificacoes from "../screens/Notificacoes";
 import Contato from "../screens/Contato";
 import Perfil from "../screens/Perfil";
+import Produtos from "../screens/Produtos";
 
 const tab = createBottomTabNavigator();
 
@@ -50,6 +51,7 @@ export default function TabNavigator() {
             />
             <tab.Screen name="Contato" component={Contato}
                 options={{
+                    tabBarShowLabel: false,
                     tabBarActiveTintColor: '#898875',
                     tabBarIcon: () => (
                         <Image
@@ -59,8 +61,21 @@ export default function TabNavigator() {
                     ),
                 }}
             />
+            <tab.Screen name="Produtos" component={Produtos}
+                options={{
+                    tabBarShowLabel: false,
+                    tabBarActiveTintColor: '#898875',
+                    tabBarIcon: () => (
+                        <Image
+                            style={{ width: 40, height: 40 }}
+                            source={require('../../assets/img/caixa.png')}
+                        />
+                    ),
+                }}
+            />
             <tab.Screen name="Notificações" component={Notificacoes}
                 options={{
+                    tabBarShowLabel: false,
                     tabBarActiveTintColor: '#898875',
                     tabBarIcon: () => (
                         <Image
@@ -72,6 +87,7 @@ export default function TabNavigator() {
             />
             <tab.Screen name="Perfil" component={Perfil}
                 options={{
+                    tabBarShowLabel: false,
                     tabBarActiveTintColor: '#898875',
                     tabBarIcon: () => (
                         <Image

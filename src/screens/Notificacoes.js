@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native
 
 export default function Notificacoes() {
   return (
-    <View style={estilo.container}>
+    <View style={styles.container}>
       <Text>kkkkkkkkkkk</Text>
     </View>
   );

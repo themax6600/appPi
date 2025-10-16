@@ -35,7 +35,7 @@ export default function Home() {
               Veja nosso menu de lanches e bebidas!
             </Text>
             <View>
-            <TouchableOpacity style={styles.btn2}>
+            <TouchableOpacity style={styles.btn2} onPress={() => navigation.navigate("Produtos")}>
               <Text style={styles.text}>SESC</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.btn2}>
