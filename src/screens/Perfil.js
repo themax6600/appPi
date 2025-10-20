@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -23,6 +23,20 @@ export default function Perfil() {
   const [rua, setRua] = useState('');
   const [bairro, setBairro] = useState('');
 
+  useEffect(() => {
+    const buscarUsuario = async () => {
+      const { data: { Users }, error } = await supabase.auth.getUser()
+
+      if (error) {
+        console.error('Erro ao obter usuário:', error.message)
+      } else if (Users) {
+        setEmailAluno(Users.emailAluno)
+      }
+    }
+
+    buscarUsuario()
+  }, [])
+
   async function salvarPerfil() {
     try {
       const user = supabase.auth.Users();
@@ -34,7 +48,7 @@ export default function Perfil() {
 
       const { error } = await supabase.from('perfil').upsert({
         id_user: user.id,
-        nome_usuario: nomeUsuario,
+        nome: nomeUsuario,
         email: emailAluno,
         data_nascimento: dataNascimento,
         telefone: telefone,
@@ -66,7 +80,11 @@ export default function Perfil() {
         </View>
         <View style={styles.userInfo}>
           <Text style={styles.name}>{nomeUsuario || 'Nome do usuário'}</Text>
-          <Text style={styles.email}>{emailAluno || 'email@doaluno.com'}</Text>
+          <View style={{ padding: 20 }}>
+            <Text style={{ fontSize: 18 }}>
+              {emailAluno ? `Usuário logado: ${emailAluno}` : 'Nenhum usuário logado'}
+            </Text>
+          </View>
         </View>
       </View>
 

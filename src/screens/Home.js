@@ -4,7 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import agenda from "../../assets/img/agenda.png";
 import menu from "../../assets/img/menu.png";
 
-export default function Home() {
+export default function Home({ navigation }) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -35,19 +35,19 @@ export default function Home() {
               Veja nosso menu de lanches e bebidas!
             </Text>
             <View>
-            <TouchableOpacity style={styles.btn2} onPress={() => navigation.navigate("Produtos")}>
-              <Text style={styles.text}>SESC</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.btn2}>
-              <Text style={styles.text}>SENAC</Text>
-            </TouchableOpacity>
+              <TouchableOpacity style={styles.btn2} onPress={() => navigation.navigate("Produtos")}>
+                <Text style={styles.text}>SESC</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.btn2} onPress={() => navigation.navigate("Produtos")}>
+                <Text style={styles.text}>SENAC</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
         <View style={styles.card}>
-          <View style={styles.bgMenu}>
+          <TouchableOpacity style={styles.bgMenu} onPress={() => navigation.navigate("Notificacoes")}>
             <Image source={agenda} style={styles.imgMenu} />
-          </View>
+          </TouchableOpacity>
           <View style={styles.col}>
             <Text style={styles.text1}>Veja aqui seus pedidos pendentes e pedidos passados.</Text>
           </View>
@@ -113,12 +113,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginLeft: 10,
   },
-  bgMenu:{
+  bgMenu: {
     backgroundColor: "#004C99",
     borderRadius: 20,
     padding: 5,
   },
-  section:{
+  section: {
     margin: 10,
   },
 });
