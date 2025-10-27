@@ -5,75 +5,89 @@ import {
     TouchableOpacity,
     FlatList,
     ActivityIndicator,
-} from 'react-native'
+    Alert,
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // 👈 Importamos o AsyncStorage
+import { supabase } from "../../utils/supabase";
+import { useState, useEffect } from "react";
 
-import { supabase } from '../../utils/supabase'
-import { useState, useEffect } from 'react'
+const STORAGE_KEY = "produtos_local"; // chave para o AsyncStorage
 
 export default function Produtos({ navigation }) {
-    const [produtos, setProdutos] = useState([])
-    const [carregando, setCarregando] = useState(true)
+    const [produtos, setProdutos] = useState([]);
+    const [carregando, setCarregando] = useState(true);
 
     useEffect(() => {
-        buscarProdutos()
-    }, [])
+        buscarProdutos();
+    }, []);
 
+    // 🔹 Busca produtos do Supabase
     async function buscarProdutos() {
         const { data, error } = await supabase
-            .from('produto')
-            .select('nome_produto, preco')
+            .from("produto")
+            .select("nome_produto, preco, id_produto");
 
         if (error) {
-            console.error('Erro ao buscar produtos:', error)
+            console.error("Erro ao buscar produtos:", error);
+            Alert.alert("Erro", "Falha ao buscar produtos.");
         } else {
-            setProdutos(data)
+            setProdutos(data);
         }
 
-        setCarregando(false)
+        setCarregando(false);
     }
 
-    async function fazerPedido(produto) {
-    const { data, error } = await supabase
-        .from('itens_pedido')
-        .insert([
-            {
-                nome_produto: produto.nome_produto,
-                preco: produto.preco,
-            }
-        ])
+    // 🔹 Função para salvar localmente usando AsyncStorage
+    async function salvarProdutoLocal(produto) {
+        try {
+            const produtoArray = [
+                produto.nome_produto,
+                produto.id_produto,
+                produto.preco,
+            ];
 
-    if (error) {
-        console.error('Erro ao fazer pedido:', error)
-        alert('Erro ao fazer pedido!')
-    } else {
-        alert(`Pedido de "${produto.nome_produto}" feito com sucesso!`)
+            const json = await AsyncStorage.getItem(STORAGE_KEY);
+            const listaAtual = json ? JSON.parse(json) : [];
+            const novaLista = [...listaAtual, produtoArray];
+
+            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(novaLista));
+
+            console.log("Produto salvo localmente:", produtoArray);
+        } catch (e) {
+            console.error("Erro ao salvar localmente:", e);
+        }
     }
-}
-
 
     const renderItem = ({ item }) => (
         <View style={styles.card}>
-            <Text style={styles.title}>{item.nome_produto}</Text>
+            <Text style={styles.title}>
+                {item.id_produto} - {item.nome_produto}
+            </Text>
             <Text style={styles.price}>R${item.preco.toFixed(2)}</Text>
+
             <TouchableOpacity
                 style={styles.button}
-                onPress={() => fazerPedido(item)}
+                onPress={() => salvarProdutoLocal(item)}
             >
                 <Text style={styles.buttonText}>Comprar</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.button}>
+
+            <TouchableOpacity
+                style={styles.button}
+                onPress={() => Alert.alert("Descrição", `Produto: ${item.nome_produto}`)}
+            >
                 <Text style={styles.buttonText}>Descrição</Text>
             </TouchableOpacity>
         </View>
-    )
+    );
 
     if (carregando) {
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
                 <ActivityIndicator size="large" color="#FFC400" />
                 <Text>Carregando produtos...</Text>
             </View>
-        )
+        );
     }
 
     return (
@@ -83,40 +97,40 @@ export default function Produtos({ navigation }) {
             renderItem={renderItem}
             contentContainerStyle={{ paddingHorizontal: 10, paddingTop: 20 }}
         />
-    )
+    );
 }
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: '#FFC400',
+        backgroundColor: "#FFC400",
         borderRadius: 20,
         padding: 10,
-        alignItems: 'center',
+        alignItems: "center",
         margin: 10,
-        shadowColor: '#000',
+        shadowColor: "#000",
         shadowOpacity: 0.2,
         shadowRadius: 5,
         elevation: 3,
-        width: '100%',
-        alignSelf: 'center',
+        width: "100%",
+        alignSelf: "center",
         marginVertical: 10,
     },
     title: {
-        fontWeight: 'bold',
+        fontWeight: "bold",
         fontSize: 16,
         marginBottom: 2,
     },
     price: {
-        fontWeight: 'bold',
+        fontWeight: "bold",
         fontSize: 16,
         marginBottom: 10,
     },
     button: {
-        backgroundColor: '#fff',
+        backgroundColor: "#fff",
         borderRadius: 15,
         paddingVertical: 8,
         paddingHorizontal: 40,
-        shadowColor: '#000',
+        shadowColor: "#000",
         shadowOffset: { width: 0, height: -50 },
         shadowOpacity: 0.35,
         shadowRadius: 36,
@@ -124,8 +138,8 @@ const styles = StyleSheet.create({
         marginTop: 10,
     },
     buttonText: {
-        color: '#000',
-        fontWeight: 'bold',
+        color: "#000",
+        fontWeight: "bold",
         fontSize: 16,
     },
-})
+});

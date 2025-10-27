@@ -22,32 +22,32 @@ export default function Perfil() {
   const [cidade, setCidade] = useState('');
   const [rua, setRua] = useState('');
   const [bairro, setBairro] = useState('');
+  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
     const buscarUsuario = async () => {
-      const { data: { Users }, error } = await supabase.auth.getUser()
+      const { data, error } = await supabase.auth.getUser();
 
       if (error) {
-        console.error('Erro ao obter usuário:', error.message)
-      } else if (Users) {
-        setEmailAluno(Users.emailAluno)
+        console.error('Erro ao obter usuário:', error.message);
+      } else if (data?.user) {
+        setEmailAluno(data.user.email);
+        setUserId(data.user.id);
       }
-    }
+    };
 
-    buscarUsuario()
-  }, [])
+    buscarUsuario();
+  }, []);
 
   async function salvarPerfil() {
     try {
-      const user = supabase.auth.Users();
-
-      if (!user) {
+      if (!userId) {
         Alert.alert('Erro', 'Usuário não está logado');
         return;
       }
 
       const { error } = await supabase.from('perfil').upsert({
-        id_user: user.id,
+        id_user: userId,
         nome: nomeUsuario,
         email: emailAluno,
         data_nascimento: dataNascimento,
