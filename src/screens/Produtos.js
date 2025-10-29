@@ -18,11 +18,9 @@ export default function Produtos({ navigation }) {
     const [produtos, setProdutos] = useState([]);
     const [carregando, setCarregando] = useState(true);
 
-buscarProdutos();
-
-    // useEffect(() => {
-    //     buscarProdutos();
-    // }, []);
+    useEffect(() => {
+        buscarProdutos();
+    }, []);
 
     async function buscarProdutos() {
         const { data, error } = await supabase
@@ -34,7 +32,6 @@ buscarProdutos();
             Alert.alert("Erro", "Falha ao buscar produtos.");
         } else {
             setProdutos(data);
-            
         }
 
         setCarregando(false);
@@ -46,8 +43,11 @@ buscarProdutos();
                 produto.nome_produto,
                 produto.id_produto,
                 produto.preco,
+                1,
                 produto.image,
             ];
+
+
             const json = await AsyncStorage.getItem(STORAGE_KEY);
             const listaAtual = json ? JSON.parse(json) : [];
             const novaLista = [...listaAtual, produtoArray];
@@ -59,8 +59,8 @@ buscarProdutos();
             console.error("Erro ao salvar localmente:", e);
         }
     }
+
     const renderItem = ({ item }) => (
-        
         <View style={styles.card}>
             <Image
                 source={{ uri: item.image }}
@@ -137,7 +137,6 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         paddingHorizontal: 40,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: -50 },
         shadowOpacity: 0.35,
         shadowRadius: 36,
         elevation: 5,

@@ -35,6 +35,7 @@ export default function Notificacoes({ navigation }) {
         id_produto: item[1],
         preco: Number(item[2]),
         quantidade: item[3] || 1,
+        image: item[3],
       }));
 
       setPedidos(pedidosConvertidos);
@@ -61,6 +62,7 @@ export default function Notificacoes({ navigation }) {
               item.id_produto,
               item.preco,
               item.quantidade,
+              item.image,
             ]);
             await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(dataParaSalvar));
           } catch (e) {
@@ -87,6 +89,7 @@ export default function Notificacoes({ navigation }) {
       item.id_produto,
       item.preco,
       item.quantidade,
+      item.image,
     ]);
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(dataParaSalvar));
   }
@@ -96,7 +99,10 @@ export default function Notificacoes({ navigation }) {
 
   const renderPedidoItem = ({ item }) => (
     <View style={styles.itemRow}>
-      <Image source={item.imagem} style={styles.itemImage} />
+      <Image 
+        source={{ uri: item.image }}
+        style={{ width: 120, height: 120, borderRadius: 10, marginBottom: 10 }}
+      />
       <View style={{ flex: 1 }}>
         <Text style={styles.itemName}>{item.nome_produto}</Text>
         <Text style={styles.itemPrice}>R$ {(item.preco * item.quantidade).toFixed(2)}</Text>
