@@ -7,14 +7,6 @@ import menu from "../../assets/img/menu.png";
 export default function Home({ navigation }) {
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.text1}>
-          Seu saldo <Text style={styles.text2}>R$0,00</Text>
-        </Text>
-        <TouchableOpacity style={styles.btn1}>
-          <Text style={styles.text3}>Inserir saldo</Text>
-        </TouchableOpacity>
-      </View>
       <View style={styles.section}>
         <LinearGradient
           colors={["#80BBFF", "#004C99"]}
@@ -26,6 +18,8 @@ export default function Home({ navigation }) {
             Seja bem-vindo à lanchonete do Sesc e Senac
           </Text>
         </LinearGradient>
+      </View>
+      <View style={styles.cards}>
         <View style={styles.card}>
           <View style={styles.bgMenu}>
             <Image source={menu} style={styles.imgMenu} />
@@ -60,13 +54,27 @@ export default function Home({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffffff"
+    backgroundColor: "#ffffffff",
+    margin: 5,
   },
-  header: {
+  section:{
+    flex: 1,
+    display: "flex",
+    justifyContent: 'center',
+  },
+  cards: {
+    flex: 2,
+  },
+  card: {
     display: "flex",
     flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 7,
+    width: 250,
+    marginBottom: 15,
+  },
+  col:{
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   btn1: {
     backgroundColor: "#FFC400",
@@ -86,10 +94,8 @@ const styles = StyleSheet.create({
   },
   text1: {
     color: "#000000ff",
-    fontSize: 25
-  },
-  text2: {
-    color: "#FFC400"
+    fontSize: 20,
+    marginStart: 10,
   },
   text3: {
     fontSize: 25,
@@ -99,26 +105,10 @@ const styles = StyleSheet.create({
   },
   bg_text: {
     borderRadius: 20,
-    marginTop: 50,
   },
-  card: {
-    display: "flex",
-    flexDirection: "row",
-    width: 10,
-    marginTop: 50,
-  },
-  col: {
-    width: 200,
-    display: 'flex',
-    justifyContent: 'space-between',
-    marginLeft: 10,
-  },
-  bgMenu: {
-    backgroundColor: "#004C99",
+  imgMenu: {
+    width: 150,
+    height: 150,
     borderRadius: 20,
-    padding: 5,
-  },
-  section: {
-    margin: 10,
   },
 });

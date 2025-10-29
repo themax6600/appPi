@@ -12,7 +12,7 @@ import {
 import { supabase } from '../../utils/supabase';
 
 export default function Perfil() {
-  const [nomeUsuario, setNomeUsuario] = useState('');
+  const [nome, setnome] = useState('');
   const [emailAluno, setEmailAluno] = useState('');
   const [dataNascimento, setDataNascimento] = useState('');
   const [telefone, setTelefone] = useState('');
@@ -22,6 +22,7 @@ export default function Perfil() {
   const [cidade, setCidade] = useState('');
   const [rua, setRua] = useState('');
   const [bairro, setBairro] = useState('');
+  const [complemento, setcomplemento] = useState('');
   const [userId, setUserId] = useState(null);
 
   useEffect(() => {
@@ -30,9 +31,25 @@ export default function Perfil() {
 
       if (error) {
         console.error('Erro ao obter usuário:', error.message);
-      } else if (data?.user) {
-        setEmailAluno(data.user.email);
-        setUserId(data.user.id);
+        return;
+      }
+
+      const user = data?.user;
+      if (user) {
+        setEmailAluno(user.email);
+        setUserId(user.id);
+
+        const { data: perfilData, error: perfilError } = await supabase
+          .from('perfil')
+          .select('nome')
+          .eq('id_user', user.id)
+          .single();
+
+        if (perfilError) {
+          console.error('Erro ao buscar nome do perfil:', perfilError.message);
+        } else if (perfilData) {
+          setnome(perfilData.nome);
+        }
       }
     };
 
@@ -48,7 +65,7 @@ export default function Perfil() {
 
       const { error } = await supabase.from('perfil').upsert({
         id_user: userId,
-        nome: nomeUsuario,
+        nome: nome,
         email: emailAluno,
         data_nascimento: dataNascimento,
         telefone: telefone,
@@ -58,6 +75,7 @@ export default function Perfil() {
         cidade: cidade,
         rua: rua,
         bairro: bairro,
+        complemento: complemento,
       }, { onConflict: 'id_user' });
 
       if (error) {
@@ -79,17 +97,17 @@ export default function Perfil() {
           </View>
         </View>
         <View style={styles.userInfo}>
-          <Text style={styles.name}>{nomeUsuario || 'Nome do usuário'}</Text>
+          <Text style={styles.name}>{nome || 'Nome do usuário'}</Text>
           <View style={{ padding: 20 }}>
             <Text style={{ fontSize: 18 }}>
-              {emailAluno ? `Usuário logado: ${emailAluno}` : 'Nenhum usuário logado'}
+              {emailAluno ? ` ${emailAluno}` : 'Nenhum usuário logado'}
             </Text>
           </View>
         </View>
       </View>
-
+      <Text style={styles.sectionTitle}>Informações Adicionais</Text>
       <View style={styles.section}>
-        <Input label="Nome Usuário" value={nomeUsuario} onChangeText={setNomeUsuario} />
+        <Input label="Nome Usuário" value={nome} onChangeText={setnome} />
         <Input label="email@ do aluno" value={emailAluno} onChangeText={setEmailAluno} />
         <Input label="Data de Nascimento" value={dataNascimento} onChangeText={setDataNascimento} />
         <Input label="Número de telefone" value={telefone} onChangeText={setTelefone} />
@@ -103,6 +121,7 @@ export default function Perfil() {
         <Input label="cidade" value={cidade} onChangeText={setCidade} />
         <Input label="rua" value={rua} onChangeText={setRua} />
         <Input label="bairro" value={bairro} onChangeText={setBairro} />
+        <Input label="Complemento" value={complemento} onChangeText={setcomplemento} />
       </View>
 
       <TouchableOpacity style={styles.button} onPress={salvarPerfil}>

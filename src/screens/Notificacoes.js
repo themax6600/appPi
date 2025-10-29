@@ -19,9 +19,11 @@ export default function Notificacoes({ navigation }) {
   const [pedidos, setPedidos] = useState([]);
   const [carregando, setCarregando] = useState(true);
 
-  useEffect(() => {
-    buscarPedidosLocais();
-  }, []);
+  buscarPedidosLocais();
+
+  // useEffect(() => {
+  //   buscarPedidosLocais();
+  // }, []);
 
   async function buscarPedidosLocais() {
     try {
@@ -32,6 +34,7 @@ export default function Notificacoes({ navigation }) {
         nome_produto: item[0],
         id_produto: item[1],
         preco: Number(item[2]),
+        quantidade: item[3] || 1,
       }));
 
       setPedidos(pedidosConvertidos);
@@ -57,6 +60,7 @@ export default function Notificacoes({ navigation }) {
               item.nome_produto,
               item.id_produto,
               item.preco,
+              item.quantidade,
             ]);
             await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(dataParaSalvar));
           } catch (e) {
@@ -67,14 +71,50 @@ export default function Notificacoes({ navigation }) {
     ]);
   }
 
-  const total = pedidos.reduce((soma, item) => soma + item.preco, 0);
+  async function alterarQuantidade(id_produto, delta) {
+    const novaLista = pedidos.map((item) => {
+      if (item.id_produto === id_produto) {
+        const novaQtd = Math.max(1, item.quantidade + delta);
+        return { ...item, quantidade: novaQtd };
+      }
+      return item;
+    });
+
+    setPedidos(novaLista);
+
+    const dataParaSalvar = novaLista.map((item) => [
+      item.nome_produto,
+      item.id_produto,
+      item.preco,
+      item.quantidade,
+    ]);
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(dataParaSalvar));
+  }
+
+
+  const total = pedidos.reduce((soma, item) => soma + item.preco * item.quantidade, 0);
 
   const renderPedidoItem = ({ item }) => (
     <View style={styles.itemRow}>
       <Image source={item.imagem} style={styles.itemImage} />
       <View style={{ flex: 1 }}>
         <Text style={styles.itemName}>{item.nome_produto}</Text>
-        <Text style={styles.itemPrice}>R$ {item.preco.toFixed(2)}</Text>
+        <Text style={styles.itemPrice}>R$ {(item.preco * item.quantidade).toFixed(2)}</Text>
+        <View style={{ flexDirection: "row", marginTop: 5 }}>
+          <TouchableOpacity
+            style={styles.qtdButton}
+            onPress={() => alterarQuantidade(item.id_produto, -1)}
+          >
+            <Text style={styles.qtdButtonText}>-</Text>
+          </TouchableOpacity>
+          <Text style={{ marginHorizontal: 10 }}>{item.quantidade}</Text>
+          <TouchableOpacity
+            style={styles.qtdButton}
+            onPress={() => alterarQuantidade(item.id_produto, 1)}
+          >
+            <Text style={styles.qtdButtonText}>+</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <TouchableOpacity onPress={() => deletarPedido(item.id_produto)}>
@@ -83,7 +123,7 @@ export default function Notificacoes({ navigation }) {
     </View>
   );
 
-  // 🔹 Função para finalizar compra e salvar no Supabase
+
   async function finalizarCompra() {
     if (pedidos.length === 0) {
       Alert.alert("Carrinho vazio", "Adicione produtos antes de finalizar.");
@@ -91,10 +131,32 @@ export default function Notificacoes({ navigation }) {
     }
 
     try {
-      const preco_total = pedidos.reduce((soma, item) => soma + item.preco, 0);
-      const id_lanchonete = 1; // ajuste conforme necessário
+      const { data: lanchonetes, error: lanchError } = await supabase
+        .from("lanchonete")
+        .select("id_lanchonete");
 
-      // Inserir pedido
+      if (lanchError) throw lanchError;
+
+      let id_lanchonete;
+
+      if (!lanchonetes || lanchonetes.length === 0) {
+        const { data: novaLanch, error: novaLanchError } = await supabase
+          .from("lanchonete")
+          .insert([{ nome_lanchonete: "Lanchonete Padrão" }])
+          .select("id_lanchonete")
+          .single();
+
+        if (novaLanchError) throw novaLanchError;
+
+        id_lanchonete = novaLanch.id_lanchonete;
+      } else {
+        id_lanchonete = lanchonetes[0].id_lanchonete;
+      }
+
+      const preco_total = pedidos.reduce(
+        (soma, item) => soma + item.preco * item.quantidade,
+        0
+      );
       const { data: pedidoData, error: pedidoError } = await supabase
         .from("pedido")
         .insert([{ id_lanchonete, preco_total }])
@@ -105,20 +167,18 @@ export default function Notificacoes({ navigation }) {
 
       const id_pedido = pedidoData.id_pedido;
 
-      // Inserir itens do pedido
-      const itensParaInserir = pedidos.map((item) => ({
-        id_pedido,
-        id_produto: item.id_produto,
-        total_item: item.preco,
-      }));
+      for (const item of pedidos) {
+        const { error: insertError } = await supabase
+          .from("itens_pedido")
+          .insert({
+            id_pedido,
+            id_produto: item.id_produto,
+            quantidade: item.quantidade,
+          });
 
-      const { error: itensError } = await supabase
-        .from("itens_pedido")
-        .insert(itensParaInserir);
+        if (insertError) throw insertError;
+      }
 
-      if (itensError) throw itensError;
-
-      // Limpar carrinho
       setPedidos([]);
       await AsyncStorage.removeItem(STORAGE_KEY);
 
@@ -174,40 +234,13 @@ export default function Notificacoes({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  content: {
-    flex: 1,
-    alignItems: "center",
-    marginTop: 20,
-  },
-  backButton: {
-    position: "absolute",
-    left: 15,
-    top: 10,
-  },
-  logo: {
-    width: 50,
-    height: 50,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginTop: 10,
-  },
-  subText: {
-    fontSize: 16,
-    color: "#004799",
-    marginTop: 30,
-  },
-  sadFace: {
-    fontSize: 24,
-    color: "#004799",
-    marginTop: 5,
-  },
-
+  container: { flex: 1, backgroundColor: "#fff" },
+  content: { flex: 1, alignItems: "center", marginTop: 20 },
+  backButton: { position: "absolute", left: 15, top: 10 },
+  logo: { width: 50, height: 50 },
+  title: { fontSize: 18, fontWeight: "bold", marginTop: 10 },
+  subText: { fontSize: 16, color: "#004799", marginTop: 30 },
+  sadFace: { fontSize: 24, color: "#004799", marginTop: 5 },
   cardPedido: {
     backgroundColor: "#fff",
     borderRadius: 15,
@@ -220,53 +253,15 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  valorTotal: {
-    alignSelf: "center",
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  buttonsRow: {
-    flexDirection: "row",
-    justifyContent: "space-evenly",
-    marginBottom: 10,
-  },
-  buttonYellow: {
-    backgroundColor: "#FFC400",
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-  },
-  buttonText: {
-    fontWeight: "bold",
-    color: "#000",
-  },
-  itemRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFF6D5",
-    borderRadius: 10,
-    padding: 8,
-    marginBottom: 8,
-  },
-  itemImage: {
-    width: 45,
-    height: 45,
-    borderRadius: 10,
-    marginRight: 10,
-  },
-  itemName: {
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  itemPrice: {
-    fontSize: 14,
-    color: "#444",
-  },
-  deleteX: {
-    fontSize: 20,
-    color: "#FF4444",
-    fontWeight: "bold",
-    paddingHorizontal: 8,
-  },
+  valorTotal: { alignSelf: "center", fontSize: 18, fontWeight: "bold", marginBottom: 10 },
+  buttonsRow: { flexDirection: "row", justifyContent: "space-evenly", marginBottom: 10 },
+  buttonYellow: { backgroundColor: "#FFC400", paddingVertical: 8, paddingHorizontal: 20, borderRadius: 10 },
+  buttonText: { fontWeight: "bold", color: "#000" },
+  itemRow: { flexDirection: "row", alignItems: "center", backgroundColor: "#FFF6D5", borderRadius: 10, padding: 8, marginBottom: 8 },
+  itemImage: { width: 45, height: 45, borderRadius: 10, marginRight: 10 },
+  itemName: { fontSize: 15, fontWeight: "600" },
+  itemPrice: { fontSize: 14, color: "#444" },
+  deleteX: { fontSize: 20, color: "#FF4444", fontWeight: "bold", paddingHorizontal: 8 },
+  qtdButton: { backgroundColor: "#FFC400", borderRadius: 5, paddingHorizontal: 10, paddingVertical: 2 },
+  qtdButtonText: { fontWeight: "bold", fontSize: 16 },
 });

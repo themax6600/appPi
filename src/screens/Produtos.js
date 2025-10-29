@@ -6,46 +6,48 @@ import {
     FlatList,
     ActivityIndicator,
     Alert,
+    Image,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage"; // 👈 Importamos o AsyncStorage
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "../../utils/supabase";
 import { useState, useEffect } from "react";
 
-const STORAGE_KEY = "produtos_local"; // chave para o AsyncStorage
+const STORAGE_KEY = "produtos_local";
 
 export default function Produtos({ navigation }) {
     const [produtos, setProdutos] = useState([]);
     const [carregando, setCarregando] = useState(true);
 
-    useEffect(() => {
-        buscarProdutos();
-    }, []);
+buscarProdutos();
 
-    // 🔹 Busca produtos do Supabase
+    // useEffect(() => {
+    //     buscarProdutos();
+    // }, []);
+
     async function buscarProdutos() {
         const { data, error } = await supabase
             .from("produto")
-            .select("nome_produto, preco, id_produto");
+            .select("nome_produto, preco, id_produto, image");
 
         if (error) {
             console.error("Erro ao buscar produtos:", error);
             Alert.alert("Erro", "Falha ao buscar produtos.");
         } else {
             setProdutos(data);
+            
         }
 
         setCarregando(false);
     }
 
-    // 🔹 Função para salvar localmente usando AsyncStorage
     async function salvarProdutoLocal(produto) {
         try {
             const produtoArray = [
                 produto.nome_produto,
                 produto.id_produto,
                 produto.preco,
+                produto.image,
             ];
-
             const json = await AsyncStorage.getItem(STORAGE_KEY);
             const listaAtual = json ? JSON.parse(json) : [];
             const novaLista = [...listaAtual, produtoArray];
@@ -57,9 +59,13 @@ export default function Produtos({ navigation }) {
             console.error("Erro ao salvar localmente:", e);
         }
     }
-
     const renderItem = ({ item }) => (
+        
         <View style={styles.card}>
+            <Image
+                source={{ uri: item.image }}
+                style={{ width: 120, height: 120, borderRadius: 10, marginBottom: 10 }}
+            />
             <Text style={styles.title}>
                 {item.id_produto} - {item.nome_produto}
             </Text>

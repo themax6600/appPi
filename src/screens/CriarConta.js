@@ -1,6 +1,5 @@
 import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native'
-
-import { supabase } from '../../utils/supabase';
+import { supabase } from '../../utils/supabase'
 import sesc from '../../assets/img/sescsenac.png'
 import { useState } from 'react'
 
@@ -12,6 +11,7 @@ export default function CriarConta({ navigation }) {
 
     async function signUpWithEmail() {
         setLoading(true)
+
         const { data, error } = await supabase.auth.signUp({
             email: email,
             password: password,
@@ -19,9 +19,29 @@ export default function CriarConta({ navigation }) {
 
         if (error) {
             Alert.alert('Erro', error.message)
-        } else {
-            Alert.alert('Sucesso', 'Verifique seu e-mail para confirmar sua conta.')
-            navigation.navigate('Logar')
+            setLoading(false)
+            return
+        }
+        const user = data.user
+
+        if (user) {
+            const { error: insertError } = await supabase
+                .from('perfil')
+                .upsert([
+                    {
+                        id_user: user.id,
+                        nome: nome,
+                        email: email,
+                    },
+                ])
+
+
+            if (insertError) {
+                Alert.alert('Erro ao salvar perfil', insertError.message)
+            } else {
+                Alert.alert('Conta criada com sucesso!')
+                navigation.navigate('Logar')
+            }
         }
 
         setLoading(false)
@@ -33,6 +53,7 @@ export default function CriarConta({ navigation }) {
                 <Image style={styles.img} source={sesc} />
                 <Text style={styles.titulo}>Lanchonete Sesc Senac</Text>
             </View>
+
             <View style={styles.inputs}>
                 <Text style={styles.text1}>Nome</Text>
                 <TextInput
@@ -58,6 +79,7 @@ export default function CriarConta({ navigation }) {
                     style={styles.input}
                 />
             </View>
+
             <View style={styles.btns}>
                 <TouchableOpacity
                     style={styles.btn1}
@@ -124,5 +146,5 @@ const styles = StyleSheet.create({
     text1: {
         color: 'white',
         fontSize: 30,
-    }
-});
+    },
+})
