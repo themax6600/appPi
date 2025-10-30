@@ -13,20 +13,34 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import seta from "../../assets/img/seta.png";
 import { supabase } from "../../utils/supabase";
 
-const STORAGE_KEY = "produtos_local";
-
 export default function Notificacoes({ navigation }) {
   const [pedidos, setPedidos] = useState([]);
   const [carregando, setCarregando] = useState(true);
+  const [userId, setUserId] = useState(null);
 
-  buscarPedidosLocais();
+  useEffect(() => {
+    async function carregarUsuario() {
+      const { data, error } = await supabase.auth.getUser();
+      if (error || !data?.user) {
+        console.log("Usuário não logado:", error);
+        Alert.alert("Erro", "Você precisa estar logado para ver seus pedidos.");
+        navigation.goBack();
+        return;
+      }
 
-  // useEffect(() => {
-  //   buscarPedidosLocais();
-  // }, []);
+      setUserId(data.user.id);
+    }
 
-  async function buscarPedidosLocais() {
+    carregarUsuario();
+  }, []);
+
+    if (userId) {
+      buscarPedidosLocais(userId);
+    }
+
+  async function buscarPedidosLocais(uid) {
     try {
+      const STORAGE_KEY = `produtos_local_${uid}`;
       const json = await AsyncStorage.getItem(STORAGE_KEY);
       const data = json ? JSON.parse(json) : [];
 
@@ -35,7 +49,7 @@ export default function Notificacoes({ navigation }) {
         id_produto: item[1],
         preco: Number(item[2]),
         quantidade: item[3] || 1,
-        image: item[3],
+        image: item[4],
       }));
 
       setPedidos(pedidosConvertidos);
@@ -44,6 +58,19 @@ export default function Notificacoes({ navigation }) {
     }
 
     setCarregando(false);
+  }
+
+  async function salvarPedidosLocais(novaLista) {
+    if (!userId) return;
+    const STORAGE_KEY = `produtos_local_${userId}`;
+    const dataParaSalvar = novaLista.map((item) => [
+      item.nome_produto,
+      item.id_produto,
+      item.preco,
+      item.quantidade,
+      item.image,
+    ]);
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(dataParaSalvar));
   }
 
   async function deletarPedido(id_produto) {
@@ -56,15 +83,7 @@ export default function Notificacoes({ navigation }) {
           try {
             const novaLista = pedidos.filter((p) => p.id_produto !== id_produto);
             setPedidos(novaLista);
-
-            const dataParaSalvar = novaLista.map((item) => [
-              item.nome_produto,
-              item.id_produto,
-              item.preco,
-              item.quantidade,
-              item.image,
-            ]);
-            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(dataParaSalvar));
+            await salvarPedidosLocais(novaLista);
           } catch (e) {
             console.error("Erro ao deletar pedido:", e);
           }
@@ -83,29 +102,25 @@ export default function Notificacoes({ navigation }) {
     });
 
     setPedidos(novaLista);
-
-    const dataParaSalvar = novaLista.map((item) => [
-      item.nome_produto,
-      item.id_produto,
-      item.preco,
-      item.quantidade,
-      item.image,
-    ]);
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(dataParaSalvar));
+    await salvarPedidosLocais(novaLista);
   }
 
-
-  const total = pedidos.reduce((soma, item) => soma + item.preco * item.quantidade, 0);
+  const total = pedidos.reduce(
+    (soma, item) => soma + item.preco * item.quantidade,
+    0
+  );
 
   const renderPedidoItem = ({ item }) => (
     <View style={styles.itemRow}>
-      <Image 
+      <Image
         source={{ uri: item.image }}
         style={{ width: 120, height: 120, borderRadius: 10, marginBottom: 10 }}
       />
       <View style={{ flex: 1 }}>
         <Text style={styles.itemName}>{item.nome_produto}</Text>
-        <Text style={styles.itemPrice}>R$ {(item.preco * item.quantidade).toFixed(2)}</Text>
+        <Text style={styles.itemPrice}>
+          R$ {(item.preco * item.quantidade).toFixed(2)}
+        </Text>
         <View style={{ flexDirection: "row", marginTop: 5 }}>
           <TouchableOpacity
             style={styles.qtdButton}
@@ -128,7 +143,6 @@ export default function Notificacoes({ navigation }) {
       </TouchableOpacity>
     </View>
   );
-
 
   async function finalizarCompra() {
     if (pedidos.length === 0) {
@@ -165,7 +179,7 @@ export default function Notificacoes({ navigation }) {
       );
       const { data: pedidoData, error: pedidoError } = await supabase
         .from("pedido")
-        .insert([{ id_lanchonete, preco_total }])
+        .insert([{ id_lanchonete, preco_total, id_user_cliente: userId }])
         .select("id_pedido")
         .single();
 
@@ -186,7 +200,7 @@ export default function Notificacoes({ navigation }) {
       }
 
       setPedidos([]);
-      await AsyncStorage.removeItem(STORAGE_KEY);
+      await AsyncStorage.removeItem(`produtos_local_${userId}`);
 
       Alert.alert("Sucesso", "Pedido finalizado!");
     } catch (error) {
@@ -264,7 +278,6 @@ const styles = StyleSheet.create({
   buttonYellow: { backgroundColor: "#FFC400", paddingVertical: 8, paddingHorizontal: 20, borderRadius: 10 },
   buttonText: { fontWeight: "bold", color: "#000" },
   itemRow: { flexDirection: "row", alignItems: "center", backgroundColor: "#FFF6D5", borderRadius: 10, padding: 8, marginBottom: 8 },
-  itemImage: { width: 45, height: 45, borderRadius: 10, marginRight: 10 },
   itemName: { fontSize: 15, fontWeight: "600" },
   itemPrice: { fontSize: 14, color: "#444" },
   deleteX: { fontSize: 20, color: "#FF4444", fontWeight: "bold", paddingHorizontal: 8 },

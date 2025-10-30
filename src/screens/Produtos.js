@@ -39,6 +39,14 @@ export default function Produtos({ navigation }) {
 
     async function salvarProdutoLocal(produto) {
         try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                Alert.alert("Erro", "Você precisa estar logado para comprar produtos.");
+                return;
+            }
+
+            const chaveUsuario = `produtos_local_${user.id}`;
+
             const produtoArray = [
                 produto.nome_produto,
                 produto.id_produto,
@@ -47,14 +55,13 @@ export default function Produtos({ navigation }) {
                 produto.image,
             ];
 
-
-            const json = await AsyncStorage.getItem(STORAGE_KEY);
+            const json = await AsyncStorage.getItem(chaveUsuario);
             const listaAtual = json ? JSON.parse(json) : [];
             const novaLista = [...listaAtual, produtoArray];
 
-            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(novaLista));
+            await AsyncStorage.setItem(chaveUsuario, JSON.stringify(novaLista));
 
-            console.log("Produto salvo localmente:", produtoArray);
+            console.log("Produto salvo localmente para o usuário:", user.id, produtoArray);
         } catch (e) {
             console.error("Erro ao salvar localmente:", e);
         }
