@@ -1,103 +1,206 @@
-import { Image, View } from "react-native";
+import { View, Image, TouchableWithoutFeedback } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { useNavigation } from "@react-navigation/native";
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    withSpring,
+    withTiming,
+    withSequence,
+    interpolateColor,
+    Easing,
+} from "react-native-reanimated";
+import { createStackNavigator, TransitionPresets } from "@react-navigation/stack";
 
-import sesc from "../../assets/img/sesc.png"
+import sesc from "../../assets/img/sesc.png";
 import senac from "../../assets/img/senac.png";
 
-import Home from '../screens/Home';
+import Home from "../screens/Home";
 import Notificacoes from "../screens/Notificacoes";
 import Contato from "../screens/Contato";
 import Perfil from "../screens/Perfil";
 import Produtos from "../screens/Produtos";
 
-const tab = createBottomTabNavigator();
+const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
+
+function AnimatedTabIcon({ source, focused, routeName }) {
+    const navigation = useNavigation();
+    const rotation = useSharedValue(0);
+    const scale = useSharedValue(focused ? 1.3 : 1);
+    const shadow = useSharedValue(focused ? 1 : 0);
+
+    const animatedStyle = useAnimatedStyle(() => {
+        const bgColor = interpolateColor(focused ? 1 : 0, [0, 1], ["transparent", "#FFC400"]);
+
+        return {
+            transform: [
+                { scale: scale.value },
+                { rotate: `${rotation.value}deg` },
+            ],
+            backgroundColor: bgColor,
+            shadowColor: "#004C99",
+            shadowOffset: { width: 0, height: 6 * shadow.value },
+            shadowOpacity: 0.3 * shadow.value,
+            shadowRadius: 12 * shadow.value,
+            elevation: 10 * shadow.value,
+        };
+    });
+
+    const handlePress = () => {
+    scale.value = withSpring(0.75, { damping: 8, stiffness: 80 }, () => {
+        scale.value = withSpring(focused ? 1.3 : 1, { damping: 10, stiffness: 150 });
+    });
+
+    rotation.value = withSequence(
+        withTiming(-12, { duration: 80 }),
+        withTiming(12, { duration: 80 }),
+        withTiming(-8, { duration: 60 }),
+        withTiming(8, { duration: 60 }),
+        withTiming(0, { duration: 60 })
+    );
+
+    shadow.value = withTiming(focused ? 1 : 0, { duration: 150 });
+
+    if (!focused) navigation.navigate(routeName);
+};
+
+
+    return (
+        <TouchableWithoutFeedback onPress={handlePress}>
+            <Animated.View
+                style={[
+                    {
+                        padding: 12,
+                        borderRadius: 30,
+                        alignItems: "center",
+                        justifyContent: "center",
+                    },
+                    animatedStyle,
+                ]}
+            >
+                <Image
+                    source={source}
+                    style={{
+                        width: 30,
+                        height: 30,
+                        tintColor: focused ? "#000" : "#808080",
+                    }}
+                    resizeMode="contain"
+                />
+            </Animated.View>
+        </TouchableWithoutFeedback>
+    );
+}
+
+function FadeScreen({ component: Component }) {
+    return (
+        <Stack.Navigator
+            screenOptions={{
+                headerShown: false,
+                ...TransitionPresets.FadeFromBottomAndroid,
+            }}
+        >
+            <Stack.Screen name="Inner" component={Component} />
+        </Stack.Navigator>
+    );
+}
 
 export default function TabNavigator() {
     return (
-        <tab.Navigator
+        <Tab.Navigator
             screenOptions={{
                 tabBarStyle: {
-                    backgroundColor: '#E8E8E8',
+                    backgroundColor: "#E8E8E8",
+                    height: 70,
+                    borderTopWidth: 0,
+                    elevation: 8,
+                    paddingBottom: 90,
                 },
                 headerStyle: {
-                    backgroundColor: '#004C99',
+                    backgroundColor: "#004C99",
                 },
                 headerTitle: () => (
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{ flexDirection: "row", alignItems: "center" }}>
                         <Image
                             source={sesc}
-                            style={{ width: 80, height: 50, resizeMode: 'contain', marginRight: 10 }}
+                            style={{ width: 80, height: 50, resizeMode: "contain", marginRight: 10 }}
                         />
                         <Image
                             source={senac}
-                            style={{ width: 80, height: 50, resizeMode: 'contain' }}
+                            style={{ width: 80, height: 50, resizeMode: "contain" }}
                         />
                     </View>
                 ),
-                headerTitleAlign: 'center',
+                headerTitleAlign: "center",
+                tabBarShowLabel: false,
             }}
         >
-            <tab.Screen name="Home" component={Home}
+            <Tab.Screen
+                name="Home"
+                children={() => <FadeScreen component={Home} />}
                 options={{
-                    tabBarShowLabel: false,
-                    tabBarActiveTintColor: '#898875',
-                    tabBarIcon: () => (
-                        <Image
-                            style={{ width: 40, height: 40 }}
-                            source={require('../../assets/img/home.png')}
+                    tabBarIcon: ({ focused }) => (
+                        <AnimatedTabIcon
+                            source={require("../../assets/img/home.png")}
+                            focused={focused}
+                            routeName="Home"
                         />
                     ),
                 }}
             />
-            <tab.Screen name="Contato" component={Contato}
+            <Tab.Screen
+                name="Contato"
+                children={() => <FadeScreen component={Contato} />}
                 options={{
-                    tabBarShowLabel: false,
-                    tabBarActiveTintColor: '#898875',
-                    tabBarIcon: () => (
-                        <Image
-                            style={{ width: 40, height: 40 }}
-                            source={require('../../assets/img/contato1.png')}
+                    tabBarIcon: ({ focused }) => (
+                        <AnimatedTabIcon
+                            source={require("../../assets/img/contato1.png")}
+                            focused={focused}
+                            routeName="Contato"
                         />
                     ),
                 }}
             />
-            <tab.Screen name="Produtos" component={Produtos}
+            <Tab.Screen
+                name="Produtos"
+                children={() => <FadeScreen component={Produtos} />}
                 options={{
-                    tabBarShowLabel: false,
-                    tabBarActiveTintColor: '#898875',
-                    tabBarIcon: () => (
-                        <Image
-                            style={{ width: 40, height: 40 }}
-                            source={require('../../assets/img/caixa.png')}
+                    tabBarIcon: ({ focused }) => (
+                        <AnimatedTabIcon
+                            source={require("../../assets/img/caixa.png")}
+                            focused={focused}
+                            routeName="Produtos"
                         />
                     ),
                 }}
             />
-            <tab.Screen name="Notificações" component={Notificacoes}
+            <Tab.Screen
+                name="Notificações"
+                children={() => <FadeScreen component={Notificacoes} />}
                 options={{
-                    tabBarShowLabel: false,
-                    tabBarActiveTintColor: '#898875',
-                    tabBarIcon: () => (
-                        <Image
-                            style={{ width: 40, height: 40 }}
-                            source={require('../../assets/img/notificacao.png')}
+                    tabBarIcon: ({ focused }) => (
+                        <AnimatedTabIcon
+                            source={require("../../assets/img/notificacao.png")}
+                            focused={focused}
+                            routeName="Notificações"
                         />
                     ),
                 }}
             />
-            <tab.Screen name="Perfil" component={Perfil}
+            <Tab.Screen
+                name="Perfil"
+                children={() => <FadeScreen component={Perfil} />}
                 options={{
-                    tabBarShowLabel: false,
-                    tabBarActiveTintColor: '#898875',
-                    tabBarIcon: () => (
-                        <Image
-                            style={{ width: 40, height: 40 }}
-                            source={require('../../assets/img/perfil1.png')}
+                    tabBarIcon: ({ focused }) => (
+                        <AnimatedTabIcon
+                            source={require("../../assets/img/perfil1.png")}
+                            focused={focused}
+                            routeName="Perfil"
                         />
                     ),
                 }}
             />
-
-        </tab.Navigator>
-    )
+        </Tab.Navigator>
+    );
 }

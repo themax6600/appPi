@@ -4,6 +4,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import agenda from "../../assets/img/agenda.png";
 import menu from "../../assets/img/menu.png";
 
+import { Dimensions } from 'react-native';
+const { width } = Dimensions.get('window');
+
 export default function Home({ navigation }) {
   return (
     <View style={styles.container}>
@@ -57,21 +60,23 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffffff",
     margin: 5,
   },
-  section:{
-    flex: 1,
+  section: {
+    flex: 0.5,
     display: "flex",
     justifyContent: 'center',
   },
   cards: {
+    display: 'flex',
+    justifyContent: 'space-around',
     flex: 2,
   },
   card: {
     display: "flex",
     flexDirection: "row",
-    width: 250,
+    width: '70%',
     marginBottom: 15,
   },
-  col:{
+  col: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -85,7 +90,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFC400",
     borderRadius: 15,
     padding: 2,
-    width: 200,
+    width: 150,
     marginTop: 5,
   },
   text: {
@@ -107,8 +112,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   imgMenu: {
-    width: 150,
-    height: 150,
+    width: width * 0.4,
+    height: width * 0.4,
     borderRadius: 20,
   },
 });
