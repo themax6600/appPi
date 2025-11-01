@@ -11,6 +11,18 @@ export default function Home({ navigation }) {
   return (
     <View style={styles.container}>
       <View style={styles.section}>
+        <TouchableOpacity onPress={() => navigation.navigate("Contato")}>
+          <LinearGradient
+            colors={["#80BBFF", "#004C99"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.btnContato}
+          >
+            <Text style={styles.textContato}>Fale conosco</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
+      <View style={styles.welcome}>
         <LinearGradient
           colors={["#80BBFF", "#004C99"]}
           start={{ x: 0, y: 0 }}
@@ -61,14 +73,17 @@ const styles = StyleSheet.create({
     margin: 5,
   },
   section: {
-    flex: 0.5,
-    display: "flex",
+    flex: 0.75,
+    display: 'flex',
     justifyContent: 'center',
+  },
+  welcome: {
+    flex: 1,
   },
   cards: {
     display: 'flex',
     justifyContent: 'space-around',
-    flex: 2,
+    flex: 4,
   },
   card: {
     display: "flex",
@@ -107,6 +122,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#ffffffff",
     padding: 4,
+    fontWeight: "bold",
   },
   bg_text: {
     borderRadius: 20,
@@ -116,4 +132,21 @@ const styles = StyleSheet.create({
     height: width * 0.4,
     borderRadius: 20,
   },
+  btnContato: {
+    borderRadius: 25,
+    paddingVertical: 10,
+    paddingHorizontal: 25,
+    alignSelf: "center",
+    elevation: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  textContato: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "bold",
+    letterSpacing: 1,
+  },
+
 });

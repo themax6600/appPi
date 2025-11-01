@@ -10,43 +10,74 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "../../utils/supabase";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
-const STORAGE_KEY = "produtos_local";
+const STORAGE_KEY = "filtro_categoria";
 
 export default function Produtos({ navigation }) {
     const [produtos, setProdutos] = useState([]);
     const [carregando, setCarregando] = useState(true);
+    const [filtro, setFiltro] = useState("todos");
+    const flatListRef = useRef(null);
 
     useEffect(() => {
-        buscarProdutos();
+        (async () => {
+            const filtroSalvo = await AsyncStorage.getItem(STORAGE_KEY);
+            if (filtroSalvo) {
+                setFiltro(filtroSalvo);
+                buscarProdutos(filtroSalvo);
+            } else {
+                buscarProdutos("todos");
+            }
+        })();
     }, []);
 
-    async function buscarProdutos() {
-        const { data, error } = await supabase
-            .from("produto")
-            .select("nome_produto, preco, id_produto, image");
-
-        if (error) {
-            console.error("Erro ao buscar produtos:", error);
-            Alert.alert("Erro", "Falha ao buscar produtos.");
-        } else {
-            setProdutos(data);
+    useEffect(() => {
+        if (filtro) {
+            AsyncStorage.setItem(STORAGE_KEY, filtro);
         }
+    }, [filtro]);
 
-        setCarregando(false);
-    }
+    const buscarProdutos = useCallback(async (tipoSelecionado = "todos") => {
+        try {
+            setCarregando(true);
+            let query = supabase
+                .from("produto")
+                .select("nome_produto, preco, id_produto, image, tipo");
+
+            if (tipoSelecionado !== "todos") {
+                query = query.eq("tipo", tipoSelecionado);
+            }
+
+            const { data, error } = await query;
+
+            if (error) {
+                console.error("Erro ao buscar produtos:", error);
+                Alert.alert("Erro", "Falha ao buscar produtos.");
+                setProdutos([]);
+            } else {
+                setProdutos(data || []);
+            }
+        } catch (e) {
+            console.error("Erro ao buscar produtos:", e);
+            Alert.alert("Erro", "Falha ao carregar os produtos.");
+        } finally {
+            setCarregando(false);
+            flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+        }
+    }, []);
 
     async function salvarProdutoLocal(produto) {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
+            const { data } = await supabase.auth.getUser();
+            const user = data?.user ?? null;
+
             if (!user) {
                 Alert.alert("Erro", "Você precisa estar logado para comprar produtos.");
                 return;
             }
 
             const chaveUsuario = `produtos_local_${user.id}`;
-
             const produtoArray = [
                 produto.nome_produto,
                 produto.id_produto,
@@ -61,9 +92,10 @@ export default function Produtos({ navigation }) {
 
             await AsyncStorage.setItem(chaveUsuario, JSON.stringify(novaLista));
 
-            console.log("Produto salvo localmente para o usuário:", user.id, produtoArray);
+            Alert.alert("Sucesso", "Produto adicionado ao carrinho local!");
         } catch (e) {
             console.error("Erro ao salvar localmente:", e);
+            Alert.alert("Erro", "Não foi possível salvar o produto localmente.");
         }
     }
 
@@ -71,12 +103,12 @@ export default function Produtos({ navigation }) {
         <View style={styles.card}>
             <Image
                 source={{ uri: item.image }}
-                style={{ width: 120, height: 120, borderRadius: 10, marginBottom: 10 }}
+                style={styles.image}
             />
             <Text style={styles.title}>
-                {item.id_produto} - {item.nome_produto}
+                {item.nome_produto}
             </Text>
-            <Text style={styles.price}>R${item.preco.toFixed(2)}</Text>
+            <Text style={styles.price}>R${Number(item.preco).toFixed(2)}</Text>
 
             <TouchableOpacity
                 style={styles.button}
@@ -87,29 +119,62 @@ export default function Produtos({ navigation }) {
 
             <TouchableOpacity
                 style={styles.button}
-                onPress={() => Alert.alert("Descrição", `Produto: ${item.nome_produto}`)}
+                onPress={() => Alert.alert("Descrição", `Produto: ${item.nome_produto}\nTipo: ${item.tipo}`)}
             >
                 <Text style={styles.buttonText}>Descrição</Text>
             </TouchableOpacity>
         </View>
     );
 
-    if (carregando) {
-        return (
-            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-                <ActivityIndicator size="large" color="#FFC400" />
-                <Text>Carregando produtos...</Text>
-            </View>
-        );
-    }
-
     return (
-        <FlatList
-            data={produtos}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={renderItem}
-            contentContainerStyle={{ paddingHorizontal: 10, paddingTop: 20 }}
-        />
+        <View style={{ flex: 1 }}>
+            <View style={styles.filterContainer}>
+                {["todos", "doce", "salgado", "bebida"].map((tipo) => (
+                    <TouchableOpacity
+                        key={tipo}
+                        style={[
+                            styles.filterButton,
+                            filtro === tipo && styles.filterButtonActive,
+                        ]}
+                        onPress={() => {
+                            setFiltro(tipo);
+                            buscarProdutos(tipo);
+                        }}
+                    >
+                        <Text
+                            style={[
+                                styles.filterButtonText,
+                                filtro === tipo && styles.filterButtonTextActive,
+                            ]}
+                        >
+                            {filtro === tipo && carregando
+                                ? "Atualizando..."
+                                : tipo.toUpperCase()}
+                        </Text>
+                    </TouchableOpacity>
+                ))}
+            </View>
+
+            {carregando ? (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#FFC400" />
+                    <Text>Carregando produtos...</Text>
+                </View>
+            ) : (
+                <FlatList
+                    ref={flatListRef}
+                    data={produtos}
+                    keyExtractor={(item) => String(item.id_produto ?? Math.random())}
+                    renderItem={renderItem}
+                    contentContainerStyle={{ paddingHorizontal: 10, paddingTop: 10 }}
+                    ListEmptyComponent={
+                        <View style={{ padding: 20, alignItems: "center" }}>
+                            <Text>Nenhum produto encontrado para essa categoria.</Text>
+                        </View>
+                    }
+                />
+            )}
+        </View>
     );
 }
 
@@ -128,15 +193,24 @@ const styles = StyleSheet.create({
         alignSelf: "center",
         marginVertical: 10,
     },
+    image: {
+        width: 120,
+        height: 120,
+        borderRadius: 10,
+        marginBottom: 10,
+    },
     title: {
         fontWeight: "bold",
-        fontSize: 16,
+        fontSize: 20,
         marginBottom: 2,
+        textAlign: "center",
+        color: '#fff',
     },
     price: {
         fontWeight: "bold",
-        fontSize: 16,
+        fontSize: 25,
         marginBottom: 10,
+        color: '#002D85',
     },
     button: {
         backgroundColor: "#fff",
@@ -153,5 +227,34 @@ const styles = StyleSheet.create({
         color: "#000",
         fontWeight: "bold",
         fontSize: 16,
+    },
+    filterContainer: {
+        flexDirection: "row",
+        justifyContent: "space-around",
+        marginVertical: 10,
+        flexWrap: "wrap",
+    },
+    filterButton: {
+        backgroundColor: "#fff",
+        padding: 8,
+        borderRadius: 15,
+        margin: 4,
+        borderWidth: 1,
+        borderColor: "#FFC400",
+    },
+    filterButtonActive: {
+        backgroundColor: "#FFC400",
+    },
+    filterButtonText: {
+        color: "#000",
+        fontWeight: "bold",
+    },
+    filterButtonTextActive: {
+        color: "#fff",
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
     },
 });

@@ -5,6 +5,7 @@ import CriarConta from "../screens/CriarConta"
 import Initial from "../screens/Initial"
 import Logar from "../screens/Logar"
 import TabNavigator from "../routes/TabNavigator"
+import Contato from "../screens/Contato"
 import AuthLoading from "../components/AuthLoading"
 
 const Stack = createStackNavigator()
@@ -20,6 +21,7 @@ export default function StackNavigator() {
             <Stack.Screen name="CriarConta" component={CriarConta} />
             <Stack.Screen name="Logar" component={Logar} />
             <Stack.Screen name="TabNavigator" component={TabNavigator} />
+            <Stack.Screen name="Contato" component={Contato} />
             <Stack.Screen name="AuthLoading" component={AuthLoading} />
         </Stack.Navigator>
     )

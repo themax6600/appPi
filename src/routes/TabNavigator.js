@@ -17,7 +17,7 @@ import senac from "../../assets/img/senac.png";
 
 import Home from "../screens/Home";
 import Notificacoes from "../screens/Notificacoes";
-import Contato from "../screens/Contato";
+import Pedidos from "../screens/Pedidos";
 import Perfil from "../screens/Perfil";
 import Produtos from "../screens/Produtos";
 
@@ -48,7 +48,7 @@ function AnimatedTabIcon({ source, focused, routeName }) {
     });
 
     const handlePress = () => {
-    scale.value = withSpring(0.75, { damping: 8, stiffness: 80 }, () => {
+    scale.value = withSpring(0.90, { damping: 8, stiffness: 80 }, () => {
         scale.value = withSpring(focused ? 1.3 : 1, { damping: 10, stiffness: 150 });
     });
 
@@ -150,14 +150,14 @@ export default function TabNavigator() {
                 }}
             />
             <Tab.Screen
-                name="Contato"
-                children={() => <FadeScreen component={Contato} />}
+                name="Pedidos"
+                children={() => <FadeScreen component={Pedidos} />}
                 options={{
                     tabBarIcon: ({ focused }) => (
                         <AnimatedTabIcon
-                            source={require("../../assets/img/contato1.png")}
+                            source={require("../../assets/img/produtos.png")}
                             focused={focused}
-                            routeName="Contato"
+                            routeName="Pedidos"
                         />
                     ),
                 }}
