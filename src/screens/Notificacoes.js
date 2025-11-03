@@ -114,7 +114,7 @@ export default function Notificacoes({ navigation }) {
     <View style={styles.itemRow}>
       <Image
         source={{ uri: item.image }}
-        style={{ width: 120, height: 120, borderRadius: 10, marginBottom: 10 }}
+        style={{ width: 80, height: 80, borderRadius: 10, marginBottom: 10 }}
       />
       <View style={{ flex: 1 }}>
         <Text style={styles.itemName}>{item.nome_produto}</Text>
@@ -229,7 +229,7 @@ export default function Notificacoes({ navigation }) {
           />
         ) : pedidos.length === 0 ? (
           <>
-            <Text style={styles.subText}>Sem pedidos salvos</Text>
+            <Text style={styles.subText}>Sem pedidos</Text>
             <Text style={styles.sadFace}>:(</Text>
           </>
         ) : (
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
   valorTotal: { alignSelf: "center", fontSize: 18, fontWeight: "bold", marginBottom: 10 },
   buttonsRow: { flexDirection: "row", justifyContent: "space-evenly", marginBottom: 10 },
   buttonYellow: { backgroundColor: "#FFC400", paddingVertical: 8, paddingHorizontal: 20, borderRadius: 10 },
-  buttonText: { fontWeight: "bold", color: "#000" },
+  buttonText: { fontWeight: "bold", color: "#000", width: 150, textAlign: 'center', },
   itemRow: { flexDirection: "row", alignItems: "center", backgroundColor: "#FFF6D5", borderRadius: 10, padding: 8, marginBottom: 8 },
   itemName: { fontSize: 15, fontWeight: "600" },
   itemPrice: { fontSize: 14, color: "#444" },

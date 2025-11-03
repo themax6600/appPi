@@ -68,36 +68,50 @@ export default function Produtos({ navigation }) {
     }, []);
 
     async function salvarProdutoLocal(produto) {
-        try {
-            const { data } = await supabase.auth.getUser();
-            const user = data?.user ?? null;
+    try {
+        const { data } = await supabase.auth.getUser();
+        const user = data?.user ?? null;
 
-            if (!user) {
-                Alert.alert("Erro", "Você precisa estar logado para comprar produtos.");
-                return;
-            }
-
-            const chaveUsuario = `produtos_local_${user.id}`;
-            const produtoArray = [
-                produto.nome_produto,
-                produto.id_produto,
-                produto.preco,
-                1,
-                produto.image,
-            ];
-
-            const json = await AsyncStorage.getItem(chaveUsuario);
-            const listaAtual = json ? JSON.parse(json) : [];
-            const novaLista = [...listaAtual, produtoArray];
-
-            await AsyncStorage.setItem(chaveUsuario, JSON.stringify(novaLista));
-
-            Alert.alert("Sucesso", "Produto adicionado ao carrinho local!");
-        } catch (e) {
-            console.error("Erro ao salvar localmente:", e);
-            Alert.alert("Erro", "Não foi possível salvar o produto localmente.");
+        if (!user) {
+            Alert.alert("Erro", "Você precisa estar logado para comprar produtos.");
+            return;
         }
+
+        const chaveUsuario = `produtos_local_${user.id}`;
+
+        const json = await AsyncStorage.getItem(chaveUsuario);
+        const listaAtual = json ? JSON.parse(json) : [];
+
+        const jaExiste = listaAtual.some(
+            (item) => item[1] === produto.id_produto
+        );
+
+        if (jaExiste) {
+            Alert.alert(
+                "Aviso!",
+                "Você já adicionou este produto. Altere a quantidade na página do carrinho."
+            );
+            return;
+        }
+
+        const produtoArray = [
+            produto.nome_produto,
+            produto.id_produto,
+            produto.preco,
+            1,
+            produto.image,
+        ];
+
+        const novaLista = [...listaAtual, produtoArray];
+        await AsyncStorage.setItem(chaveUsuario, JSON.stringify(novaLista));
+
+        Alert.alert("Sucesso", "Produto adicionado ao carrinho, altere a página para finalizar a compra");
+    } catch (e) {
+        console.error("Erro ao salvar localmente:", e);
+        Alert.alert("Erro", "Não foi possível salvar o produto localmente.");
     }
+}
+
 
     const renderItem = ({ item }) => (
         <View style={styles.card}>

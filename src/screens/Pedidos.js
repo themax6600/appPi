@@ -1,16 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, FlatList, Image, ActivityIndicator, StyleSheet } from 'react-native';
 import { supabase } from '../../utils/supabase';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 
-export default function PedidosScreen() {
+export default function PedidosScreen({ navigation }) {
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(null);
 
-  useEffect(() => {
+  useFocusEffect(
+  useCallback(() => {
     buscarPedidos();
-  }, []);
+  }, [])
+);
+
 
   const buscarPedidos = async () => {
     setLoading(true);
@@ -45,7 +49,10 @@ export default function PedidosScreen() {
           `)
           .eq('id_pedido', pedido.id_pedido);
 
-        if (erroItens) console.error('Erro ao buscar itens:', erroItens);
+        if (erroItens) {
+          console.error('Erro ao buscar itens do pedido', pedido.id_pedido, ':', erroItens);
+          return { ...pedido, itens: [] };
+        }
 
         return { ...pedido, itens };
       })
@@ -73,7 +80,9 @@ export default function PedidosScreen() {
         renderItem={({ item }) => (
           <View style={styles.card}>
             <View style={styles.header}>
-              <Text style={styles.status}>Seu pedido foi {item.status_pedido.toLowerCase()} - R${item.preco_total}</Text>
+              <Text style={styles.status}>
+                Seu pedido está {item.status_pedido?.toLowerCase()} - R${item.preco_total}
+              </Text>
               <TouchableOpacity onPress={() => setExpanded(expanded === item.id_pedido ? null : item.id_pedido)}>
                 <Ionicons
                   name={expanded === item.id_pedido ? 'chevron-up-outline' : 'chevron-down-outline'}
@@ -85,17 +94,26 @@ export default function PedidosScreen() {
 
             {expanded === item.id_pedido && (
               <View style={styles.itemsContainer}>
-                {item.itens?.map((i, index) => (
-                  <View key={index} style={styles.itemCard}>
-                    <Image source={{ uri: i.produto?.image }} style={styles.itemImage} />
-                    <View style={styles.itemInfo}>
-                      <Text style={styles.itemName}>{i.produto?.nome_produto}</Text>
-                      <TouchableOpacity style={styles.button}>
-                        <Text style={styles.buttonText}>Ver produto</Text>
-                      </TouchableOpacity>
+                {item.itens?.length > 0 ? (
+                  item.itens.map((i, index) => (
+                    <View key={index} style={styles.itemCard}>
+                      <Image
+                        source={{ uri: i.produto?.image }}
+                        style={styles.itemImage}
+                      />
+                      <View style={styles.itemInfo}>
+                        <Text style={styles.itemName}>{i.produto?.nome_produto}</Text>
+                        <Text style={styles.itemQuantity}>Qtd: {i.quantidade}</Text>
+                        <Text style={styles.itemPrice}>R$ {i.produto?.preco}</Text>
+                        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Produtos")}>
+                          <Text style={styles.buttonText}>Ver produto</Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
-                  </View>
-                ))}
+                  ))
+                ) : (
+                  <Text style={{ textAlign: 'center', color: '#555' }}>Nenhum item encontrado.</Text>
+                )}
               </View>
             )}
           </View>
@@ -108,7 +126,7 @@ export default function PedidosScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#3b3b3b',
+    backgroundColor: '#fff',
     paddingTop: 50,
     paddingHorizontal: 16,
   },
@@ -116,16 +134,15 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#3b3b3b',
+    backgroundColor: '#fff',
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#fff',
     marginBottom: 20,
   },
   card: {
-    backgroundColor: '#2c2c2c',
+    backgroundColor: '#3b3b3b',
     borderRadius: 12,
     marginBottom: 20,
     padding: 15,
@@ -154,8 +171,8 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   itemImage: {
-    width: 60,
-    height: 60,
+    width: 80,
+    height: 80,
     borderRadius: 10,
     marginRight: 10,
   },
@@ -165,6 +182,16 @@ const styles = StyleSheet.create({
   itemName: {
     fontSize: 15,
     fontWeight: '600',
+    marginBottom: 3,
+  },
+  itemQuantity: {
+    fontSize: 13,
+    color: '#555',
+    marginBottom: 2,
+  },
+  itemPrice: {
+    fontSize: 13,
+    color: '#222',
     marginBottom: 5,
   },
   button: {
