@@ -88,12 +88,12 @@ export default function Perfil() {
   const validarCampos = () => {
     const limparNumero = (v) => v?.replace(/\D/g, '');
 
-    if (!nome.trim()) return 'O nome é obrigatório.';
-    if (limparNumero(cpf)?.length !== 11) return 'CPF inválido.';
-    if (limparNumero(telefone)?.length < 10) return 'Telefone inválido.';
+    if (cpf && limparNumero(cpf)?.length !== 11) return 'CPF inválido.';
+    if (telefone && limparNumero(telefone)?.length < 10) return 'Telefone inválido.';
     if (dataNascimento && !brDateToISO(dataNascimento))
       return 'Data de nascimento inválida. Use o formato DD/MM/AAAA.';
-    return null;
+    
+    return null; // Nenhum campo é obrigatório
   };
 
   async function salvarPerfil() {
@@ -114,17 +114,17 @@ export default function Perfil() {
 
       const perfilData = {
         id_user: userId,
-        nome,
-        email: emailAluno,
-        data_nascimento: dataISO,
-        telefone: limparNumero(telefone),
-        cpf: limparNumero(cpf),
-        cep: limparNumero(cep),
-        estado,
-        cidade,
-        rua,
-        bairro,
-        complemento,
+        nome: nome || null,
+        email: emailAluno || null,
+        data_nascimento: dataISO || null,
+        telefone: limparNumero(telefone) || null,
+        cpf: limparNumero(cpf) || null,
+        cep: limparNumero(cep) || null,
+        estado: estado || null,
+        cidade: cidade || null,
+        rua: rua || null,
+        bairro: bairro || null,
+        complemento: complemento || null,
       };
 
       const { error } = await supabase.from('perfil').upsert(perfilData, {
