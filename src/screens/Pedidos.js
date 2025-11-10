@@ -15,7 +15,6 @@ export default function PedidosScreen({ navigation }) {
   }, [])
 );
 
-
   const buscarPedidos = async () => {
     setLoading(true);
 

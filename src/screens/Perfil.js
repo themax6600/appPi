@@ -7,7 +7,9 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Image,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../../utils/supabase';
 
 export default function Perfil() {
@@ -24,23 +26,8 @@ export default function Perfil() {
   const [complemento, setComplemento] = useState('');
   const [userId, setUserId] = useState(null);
   const [carregado, setCarregado] = useState(false);
-
-  const brDateToISO = (brDate) => {
-    if (!brDate) return null;
-    const parts = brDate.split('/');
-    if (parts.length !== 3) return null;
-    const [day, month, year] = parts.map((p) => parseInt(p, 10));
-    if (!day || !month || !year) return null;
-    const date = new Date(year, month - 1, day);
-    if (
-      date.getFullYear() !== year ||
-      date.getMonth() !== month - 1 ||
-      date.getDate() !== day
-    ) {
-      return null;
-    }
-    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-  };
+  const [fotoUri, setFotoUri] = useState(null); // URI local da foto
+  const [fotoUrl, setFotoUrl] = useState(null); // URL pública no Supabase
 
   useEffect(() => {
     const buscarUsuario = async () => {
@@ -78,6 +65,7 @@ export default function Perfil() {
         setRua(perfilData.rua || '');
         setBairro(perfilData.bairro || '');
         setComplemento(perfilData.complemento || '');
+        setFotoUrl(perfilData.foto || null);
       }
     };
 
@@ -86,65 +74,135 @@ export default function Perfil() {
 
   const validarCampos = () => {
     const limparNumero = (v) => v?.replace(/\D/g, '');
-
     if (cpf && limparNumero(cpf)?.length !== 11) return 'CPF inválido.';
     if (telefone && limparNumero(telefone)?.length < 10) return 'Telefone inválido.';
     return null;
   };
 
-  async function salvarPerfil() {
+  const escolherFoto = async () => {
     try {
-      if (!userId) {
-        Alert.alert('Erro', 'Usuário não está logado');
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Permissão necessária', 'Precisamos acessar suas fotos.');
         return;
       }
 
-      const erro = validarCampos();
-      if (erro) {
-        Alert.alert('Erro', erro);
-        return;
-      }
-
-      const limparNumero = (valor) => (valor ? valor.replace(/\D/g, '') : null);
-      const dataISO = brDateToISO(dataNascimento);
-
-      const perfilData = {
-        id_user: userId,
-        nome: nome || null,
-        email: emailAluno || null,
-        data_nascimento: dataISO || null,
-        telefone: limparNumero(telefone) || null,
-        cpf: limparNumero(cpf) || null,
-        cep: limparNumero(cep) || null,
-        estado: estado || null,
-        cidade: cidade || null,
-        rua: rua || null,
-        bairro: bairro || null,
-        complemento: complemento || null,
-      };
-
-      const { error } = await supabase.from('perfil').upsert(perfilData, {
-        onConflict: 'id_user',
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
       });
 
-      if (error) {
-        Alert.alert('Erro ao salvar perfil', error.message);
-      } else {
-        Alert.alert('Sucesso', 'Perfil salvo com sucesso!');
+      if (!result.canceled) {
+        const uri = result.assets[0].uri;
+        setFotoUri(uri);
       }
-    } catch (error) {
-      Alert.alert('Erro inesperado', error.message);
+    } catch (err) {
+      Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
     }
+  };
+
+  const uploadFoto = async (uri) => {
+    try {
+      if (!uri || !userId) return null;
+
+      const fileExt = uri.split('.').pop();
+      const fileName = `${userId}.${fileExt}`;
+
+      const response = await fetch(uri);
+      const arrayBuffer = await response.arrayBuffer();
+      const file = new Uint8Array(arrayBuffer);
+
+      const { error } = await supabase.storage
+        .from('perfil_fotos')
+        .upload(fileName, file, { upsert: true });
+
+      if (error) {
+        console.log('Erro ao enviar foto:', error.message);
+        return null;
+      }
+
+      const { data: publicData } = supabase.storage
+        .from('perfil_fotos')
+        .getPublicUrl(fileName);
+
+      return publicData.publicUrl;
+    } catch (err) {
+      console.log('Erro uploadFoto:', err.message);
+      return null;
+    }
+  };
+
+  const salvarPerfil = async () => {
+  try {
+    if (!userId) {
+      Alert.alert('Erro', 'Usuário não está logado');
+      return;
+    }
+
+    const erro = validarCampos();
+    if (erro) {
+      Alert.alert('Erro', erro);
+      return;
+    }
+
+    let fotoPublica = fotoUrl;
+    if (fotoUri) {
+      const url = await uploadFoto(fotoUri);
+      if (url) fotoPublica = url;
+    }
+
+    const limparNumero = (valor) => (valor ? valor.replace(/\D/g, '') : null);
+
+    const perfilData = {
+      id_user: userId,
+      nome: nome || null,
+      email: emailAluno || null,
+      data_nascimento: dataNascimento || null,
+      telefone: limparNumero(telefone) || null,
+      cpf: limparNumero(cpf) || null,
+      cep: limparNumero(cep) || null,
+      estado: estado || null,
+      cidade: cidade || null,
+      rua: rua || null,
+      bairro: bairro || null,
+      complemento: complemento || null,
+      foto: fotoPublica || null,
+    };
+
+    const { error } = await supabase.from('perfil').upsert(perfilData, {
+      onConflict: 'id_user',
+    });
+
+    if (error) {
+      Alert.alert('Erro ao salvar perfil', error.message);
+    } else {
+      setFotoUrl(fotoPublica);
+      setFotoUri(null);
+      Alert.alert('Sucesso', 'Perfil salvo com sucesso!');
+    }
+  } catch (error) {
+    Alert.alert('Erro inesperado', error.message);
   }
+};
+
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
-        <View style={styles.avatarContainer}>
-          <View style={styles.avatarPlaceholder}>
-            <Text style={styles.avatarText}>Foto</Text>
-          </View>
-        </View>
+        <TouchableOpacity onPress={escolherFoto}>
+          {fotoUri || fotoUrl ? (
+            <Image
+              source={{ uri: fotoUri || fotoUrl }}
+              style={styles.avatarPlaceholder}
+            />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Text style={styles.avatarText}>Foto</Text>
+            </View>
+          )}
+        </TouchableOpacity>
         <View style={styles.userInfo}>
           <Text style={styles.name}>{nome || 'Nome do usuário'}</Text>
           <Text style={{ fontSize: 18 }}>
@@ -155,50 +213,22 @@ export default function Perfil() {
 
       <Text style={styles.sectionTitle}>Informações Adicionais</Text>
       <View style={styles.section}>
-        <Input
-          label="Nome Usuário"
-          value={nome}
-          onChangeText={setNome}
-          maxLength={50}
-        />
-        <Input
-          label="Email do aluno"
-          value={emailAluno}
-          onChangeText={setEmailAluno}
-          maxLength={60}
-        />
+        <Input label="Nome Usuário" value={nome} onChangeText={setNome} maxLength={50} />
+        <Input label="Email do aluno" value={emailAluno} onChangeText={setEmailAluno} maxLength={60} />
         <Input
           label="Data de Nascimento (DD/MM/AAAA)"
           value={dataNascimento}
           onChangeText={setDataNascimento}
-          maxLength={8}
+          maxLength={10}
           keyboardType="numeric"
         />
-        <Input
-          label="Telefone"
-          value={telefone}
-          onChangeText={setTelefone}
-          maxLength={15}
-          keyboardType="numeric"
-        />
-        <Input
-          label="CPF"
-          value={cpf}
-          onChangeText={setCpf}
-          maxLength={11}
-          keyboardType="numeric"
-        />
+        <Input label="Telefone" value={telefone} onChangeText={setTelefone} maxLength={11} keyboardType="numeric" />
+        <Input label="CPF" value={cpf} onChangeText={setCpf} maxLength={11} keyboardType="numeric" />
       </View>
 
       <Text style={styles.sectionTitle}>Endereço</Text>
       <View style={styles.section}>
-        <Input
-          label="CEP"
-          value={cep}
-          onChangeText={setCep}
-          maxLength={9}
-          keyboardType="numeric"
-        />
+        <Input label="CEP" value={cep} onChangeText={setCep} maxLength={9} keyboardType="numeric" />
         <TextInput
           style={styles.input}
           placeholder="Estado"
@@ -213,12 +243,7 @@ export default function Perfil() {
         <Input label="Cidade" value={cidade} onChangeText={setCidade} maxLength={40} />
         <Input label="Rua" value={rua} onChangeText={setRua} maxLength={60} />
         <Input label="Bairro" value={bairro} onChangeText={setBairro} maxLength={40} />
-        <Input
-          label="Complemento"
-          value={complemento}
-          onChangeText={setComplemento}
-          maxLength={60}
-        />
+        <Input label="Complemento" value={complemento} onChangeText={setComplemento} maxLength={60} />
       </View>
 
       <TouchableOpacity style={styles.button} onPress={salvarPerfil}>
@@ -250,16 +275,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  avatarContainer: {
-    marginBottom: 10,
-  },
   avatarPlaceholder: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: '#ccc',
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 10,
   },
   avatarText: {
     color: '#333',
@@ -282,6 +305,7 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 10,
     fontSize: 16,
+    width: '100%',
   },
   sectionTitle: {
     fontSize: 18,
