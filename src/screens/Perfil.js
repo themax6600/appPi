@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import { MaskedTextInput } from 'react-native-mask-text';
 import { supabase } from '../../utils/supabase';
 
 export default function Perfil() {
@@ -90,10 +89,7 @@ export default function Perfil() {
 
     if (cpf && limparNumero(cpf)?.length !== 11) return 'CPF inválido.';
     if (telefone && limparNumero(telefone)?.length < 10) return 'Telefone inválido.';
-    if (dataNascimento && !brDateToISO(dataNascimento))
-      return 'Data de nascimento inválida. Use o formato DD/MM/AAAA.';
-    
-    return null; // Nenhum campo é obrigatório
+    return null;
   };
 
   async function salvarPerfil() {
@@ -162,7 +158,7 @@ export default function Perfil() {
         <Input
           label="Nome Usuário"
           value={nome}
-          onChangeText={(text) => setNome(text.replace(/[0-9]/g, ''))}
+          onChangeText={setNome}
           maxLength={50}
         />
         <Input
@@ -171,43 +167,45 @@ export default function Perfil() {
           onChangeText={setEmailAluno}
           maxLength={60}
         />
-        <InputMask
-          label="Data de Nascimento"
+        <Input
+          label="Data de Nascimento (DD/MM/AAAA)"
           value={dataNascimento}
           onChangeText={setDataNascimento}
-          mask="99/99/9999"
-          maxLength={10}
+          maxLength={8}
+          keyboardType="numeric"
         />
-        <InputMask
+        <Input
           label="Telefone"
           value={telefone}
           onChangeText={setTelefone}
-          mask="(99) 99999-9999"
           maxLength={15}
+          keyboardType="numeric"
         />
-        <InputMask
+        <Input
           label="CPF"
           value={cpf}
           onChangeText={setCpf}
-          mask="999.999.999-99"
-          maxLength={14}
+          maxLength={11}
+          keyboardType="numeric"
         />
       </View>
 
       <Text style={styles.sectionTitle}>Endereço</Text>
       <View style={styles.section}>
-        <InputMask
+        <Input
           label="CEP"
           value={cep}
           onChangeText={setCep}
-          mask="99999-999"
           maxLength={9}
+          keyboardType="numeric"
         />
         <TextInput
           style={styles.input}
           placeholder="Estado"
           value={estado}
-          onChangeText={(text) => setEstado(text.replace(/[^A-Za-z]/g, '').toUpperCase())}
+          onChangeText={(text) =>
+            setEstado(text.replace(/[^A-Za-z]/g, '').toUpperCase())
+          }
           maxLength={2}
           autoCapitalize="characters"
           placeholderTextColor="#000"
@@ -230,8 +228,7 @@ export default function Perfil() {
   );
 }
 
-// 🔹 Componentes reutilizáveis
-const Input = ({ label, value, onChangeText, maxLength }) => (
+const Input = ({ label, value, onChangeText, maxLength, keyboardType }) => (
   <TextInput
     style={styles.input}
     placeholder={label}
@@ -239,19 +236,7 @@ const Input = ({ label, value, onChangeText, maxLength }) => (
     onChangeText={onChangeText}
     placeholderTextColor="#000"
     maxLength={maxLength}
-  />
-);
-
-const InputMask = ({ label, value, onChangeText, mask, maxLength }) => (
-  <MaskedTextInput
-    style={styles.input}
-    placeholder={label}
-    value={value}
-    onChangeText={onChangeText}
-    mask={mask}
-    keyboardType="numeric"
-    placeholderTextColor="#000"
-    maxLength={maxLength}
+    keyboardType={keyboardType}
   />
 );
 
