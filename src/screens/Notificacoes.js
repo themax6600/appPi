@@ -34,9 +34,9 @@ export default function Notificacoes({ navigation }) {
     carregarUsuario();
   }, []);
 
-    if (userId) {
-      buscarPedidosLocais(userId);
-    }
+  if (userId) {
+    buscarPedidosLocais(userId);
+  }
 
   async function buscarPedidosLocais(uid) {
     try {
@@ -144,39 +144,18 @@ export default function Notificacoes({ navigation }) {
     </View>
   );
 
-  async function finalizarCompra() {
+  async function finalizarCompra(id_lanchonete) {
     if (pedidos.length === 0) {
       Alert.alert("Carrinho vazio", "Adicione produtos antes de finalizar.");
       return;
     }
 
     try {
-      const { data: lanchonetes, error: lanchError } = await supabase
-        .from("lanchonete")
-        .select("id_lanchonete");
-
-      if (lanchError) throw lanchError;
-
-      let id_lanchonete;
-
-      if (!lanchonetes || lanchonetes.length === 0) {
-        const { data: novaLanch, error: novaLanchError } = await supabase
-          .from("lanchonete")
-          .insert([{ nome_lanchonete: "Lanchonete Padrão" }])
-          .select("id_lanchonete")
-          .single();
-
-        if (novaLanchError) throw novaLanchError;
-
-        id_lanchonete = novaLanch.id_lanchonete;
-      } else {
-        id_lanchonete = lanchonetes[0].id_lanchonete;
-      }
-
       const preco_total = pedidos.reduce(
         (soma, item) => soma + item.preco * item.quantidade,
         0
       );
+
       const { data: pedidoData, error: pedidoError } = await supabase
         .from("pedido")
         .insert([{ id_lanchonete, preco_total, id_user_cliente: userId }])
@@ -208,6 +187,7 @@ export default function Notificacoes({ navigation }) {
       Alert.alert("Erro", "Não foi possível finalizar o pedido.");
     }
   }
+
 
   return (
     <View style={styles.container}>
@@ -244,16 +224,52 @@ export default function Notificacoes({ navigation }) {
           </View>
         )}
       </View>
+      <View style={styles.dividerContainer}>
+        <View style={styles.dividerLine} />
+        <Text style={styles.dividerText}>Finalizar Compra Na</Text>
+        <View style={styles.dividerLine} />
+      </View>
       <View style={styles.buttonsRow}>
-        <TouchableOpacity style={styles.buttonYellow} onPress={finalizarCompra}>
-          <Text style={styles.buttonText}>Finalizar Compra</Text>
+        <TouchableOpacity
+          style={styles.buttonYellow}
+          onPress={() => finalizarCompra(2)}
+        >
+          <Text style={styles.buttonText}>Lanchonete Sesc</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.buttonYellow}
+          onPress={() => finalizarCompra(3)}
+        >
+          <Text style={styles.buttonText}>Lanchonete Senac</Text>
         </TouchableOpacity>
       </View>
+
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  dividerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "90%",
+    alignSelf: "center",
+    marginVertical: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1.5,
+    backgroundColor: "#004799",
+    opacity: 0.5,
+  },
+  dividerText: {
+    marginHorizontal: 10,
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#004799",
+  },
   container: { flex: 1, backgroundColor: "#fff" },
   content: { flex: 1, alignItems: "center", marginTop: 20 },
   backButton: { position: "absolute", left: 15, top: 10 },
