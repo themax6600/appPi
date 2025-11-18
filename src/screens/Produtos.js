@@ -11,6 +11,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "../../utils/supabase";
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useNotificacao } from "../components/NotificacaoContext";
 
 const STORAGE_KEY = "filtro_categoria";
 
@@ -19,6 +20,8 @@ export default function Produtos({ navigation }) {
     const [carregando, setCarregando] = useState(true);
     const [filtro, setFiltro] = useState("todos");
     const flatListRef = useRef(null);
+    const { adicionarNotificacao } = useNotificacao();
+
 
     useEffect(() => {
         (async () => {
@@ -68,49 +71,47 @@ export default function Produtos({ navigation }) {
     }, []);
 
     async function salvarProdutoLocal(produto) {
-    try {
-        const { data } = await supabase.auth.getUser();
-        const user = data?.user ?? null;
+        try {
+            const { data } = await supabase.auth.getUser();
+            const user = data?.user ?? null;
 
-        if (!user) {
-            Alert.alert("Erro", "Você precisa estar logado para comprar produtos.");
-            return;
-        }
+            if (!user) {
+                Alert.alert("Erro", "Você precisa estar logado para comprar produtos.");
+                return;
+            }
 
-        const chaveUsuario = `produtos_local_${user.id}`;
+            const chaveUsuario = `produtos_local_${user.id}`;
+            const json = await AsyncStorage.getItem(chaveUsuario);
+            const listaAtual = json ? JSON.parse(json) : [];
 
-        const json = await AsyncStorage.getItem(chaveUsuario);
-        const listaAtual = json ? JSON.parse(json) : [];
-
-        const jaExiste = listaAtual.some(
-            (item) => item[1] === produto.id_produto
-        );
-
-        if (jaExiste) {
-            Alert.alert(
-                "Aviso!",
-                "Você já adicionou este produto. Altere a quantidade na página do carrinho."
+            const jaExiste = listaAtual.some(
+                (item) => item[1] === produto.id_produto
             );
-            return;
+
+            if (jaExiste) {
+                Alert.alert("Aviso!", "Você já adicionou este produto.");
+                return;
+            }
+
+            const produtoArray = [
+                produto.nome_produto,
+                produto.id_produto,
+                produto.preco,
+                1,
+                produto.image,
+            ];
+
+            const novaLista = [...listaAtual, produtoArray];
+            await AsyncStorage.setItem(chaveUsuario, JSON.stringify(novaLista));
+
+            adicionarNotificacao();
+
+            Alert.alert("Sucesso", "Produto adicionado ao carrinho!");
+        } catch (e) {
+            console.error("Erro:", e);
+            Alert.alert("Erro", "Não foi possível salvar o produto.");
         }
-
-        const produtoArray = [
-            produto.nome_produto,
-            produto.id_produto,
-            produto.preco,
-            1,
-            produto.image,
-        ];
-
-        const novaLista = [...listaAtual, produtoArray];
-        await AsyncStorage.setItem(chaveUsuario, JSON.stringify(novaLista));
-
-        Alert.alert("Sucesso", "Produto adicionado ao carrinho, altere a página para finalizar a compra");
-    } catch (e) {
-        console.error("Erro ao salvar localmente:", e);
-        Alert.alert("Erro", "Não foi possível salvar o produto localmente.");
     }
-}
 
 
     const renderItem = ({ item }) => (

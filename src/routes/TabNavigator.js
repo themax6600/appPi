@@ -1,4 +1,4 @@
-import { View, Image, TouchableWithoutFeedback } from "react-native";
+import { View, Image, TouchableWithoutFeedback, Text } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useNavigation } from "@react-navigation/native";
 import Animated, {
@@ -8,8 +8,8 @@ import Animated, {
     withTiming,
     withSequence,
     interpolateColor,
-    Easing,
 } from "react-native-reanimated";
+import { useEffect } from "react";
 import { createStackNavigator, TransitionPresets } from "@react-navigation/stack";
 
 import sesc from "../../assets/img/sesc.png";
@@ -20,6 +20,8 @@ import Notificacoes from "../screens/Notificacoes";
 import Pedidos from "../screens/Pedidos";
 import Perfil from "../screens/Perfil";
 import Produtos from "../screens/Produtos";
+
+import { useNotificacao } from "../components/NotificacaoContext";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -48,23 +50,20 @@ function AnimatedTabIcon({ source, focused, routeName }) {
     });
 
     const handlePress = () => {
-    scale.value = withSpring(0.90, { damping: 8, stiffness: 80 }, () => {
-        scale.value = withSpring(focused ? 1.3 : 1, { damping: 10, stiffness: 150 });
-    });
+        scale.value = withSpring(0.90, {}, () => {
+            scale.value = withSpring(focused ? 1.3 : 1);
+        });
 
-    rotation.value = withSequence(
-        withTiming(-12, { duration: 80 }),
-        withTiming(12, { duration: 80 }),
-        withTiming(-8, { duration: 60 }),
-        withTiming(8, { duration: 60 }),
-        withTiming(0, { duration: 60 })
-    );
+        rotation.value = withSequence(
+            withTiming(-12, { duration: 80 }),
+            withTiming(12, { duration: 80 }),
+            withTiming(-8, { duration: 60 }),
+            withTiming(8, { duration: 60 }),
+            withTiming(0, { duration: 60 })
+        );
 
-    shadow.value = withTiming(focused ? 1 : 0, { duration: 150 });
-
-    if (!focused) navigation.navigate(routeName);
-};
-
+        if (!focused) navigation.navigate(routeName);
+    };
 
     return (
         <TouchableWithoutFeedback onPress={handlePress}>
@@ -81,12 +80,7 @@ function AnimatedTabIcon({ source, focused, routeName }) {
             >
                 <Image
                     source={source}
-                    style={{
-                        width: 30,
-                        height: 30,
-                        tintColor: focused ? "#000" : "#808080",
-                    }}
-                    resizeMode="contain"
+                    style={{ width: 30, height: 30, tintColor: focused ? "#000" : "#808080" }}
                 />
             </Animated.View>
         </TouchableWithoutFeedback>
@@ -95,18 +89,30 @@ function AnimatedTabIcon({ source, focused, routeName }) {
 
 function FadeScreen({ component: Component }) {
     return (
-        <Stack.Navigator
-            screenOptions={{
-                headerShown: false,
-                ...TransitionPresets.FadeFromBottomAndroid,
-            }}
-        >
+        <Stack.Navigator screenOptions={{ headerShown: false, ...TransitionPresets.FadeFromBottomAndroid }}>
             <Stack.Screen name="Inner" component={Component} />
         </Stack.Navigator>
     );
 }
 
 export default function TabNavigator() {
+    const { contador, zerarNotificacoes } = useNotificacao();
+
+    const badgeScale = useSharedValue(1);
+
+    useEffect(() => {
+        badgeScale.value = 1;
+
+        setTimeout(() => {
+            badgeScale.value = 1.5;
+            badgeScale.value = withSpring(1, { damping: 7, stiffness: 150 });
+        }, 0);
+    }, [contador]);
+
+    const badgeAnimatedStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: badgeScale.value }],
+    }));
+
     return (
         <Tab.Navigator
             screenOptions={{
@@ -117,19 +123,11 @@ export default function TabNavigator() {
                     elevation: 8,
                     paddingBottom: 90,
                 },
-                headerStyle: {
-                    backgroundColor: "#004C99",
-                },
+                headerStyle: { backgroundColor: "#004C99" },
                 headerTitle: () => (
                     <View style={{ flexDirection: "row", alignItems: "center" }}>
-                        <Image
-                            source={sesc}
-                            style={{ width: 80, height: 50, resizeMode: "contain", marginRight: 10 }}
-                        />
-                        <Image
-                            source={senac}
-                            style={{ width: 80, height: 50, resizeMode: "contain" }}
-                        />
+                        <Image source={sesc} style={{ width: 80, height: 50, marginRight: 10 }} />
+                        <Image source={senac} style={{ width: 80, height: 50 }} />
                     </View>
                 ),
                 headerTitleAlign: "center",
@@ -149,6 +147,7 @@ export default function TabNavigator() {
                     ),
                 }}
             />
+
             <Tab.Screen
                 name="Pedidos"
                 children={() => <FadeScreen component={Pedidos} />}
@@ -162,6 +161,7 @@ export default function TabNavigator() {
                     ),
                 }}
             />
+
             <Tab.Screen
                 name="Produtos"
                 children={() => <FadeScreen component={Produtos} />}
@@ -175,19 +175,49 @@ export default function TabNavigator() {
                     ),
                 }}
             />
+
             <Tab.Screen
                 name="Notificações"
                 children={() => <FadeScreen component={Notificacoes} />}
+                listeners={{
+                    tabPress: () => zerarNotificacoes()
+                }}
                 options={{
                     tabBarIcon: ({ focused }) => (
-                        <AnimatedTabIcon
-                            source={require("../../assets/img/notificacao.png")}
-                            focused={focused}
-                            routeName="Notificações"
-                        />
+                        <View>
+                            <AnimatedTabIcon
+                                source={require("../../assets/img/notificacao.png")}
+                                focused={focused}
+                                routeName="Notificações"
+                            />
+
+                            {contador > 0 && (
+                                <Animated.View
+                                    style={[
+                                        {
+                                            position: "absolute",
+                                            top: -2,
+                                            right: -2,
+                                            backgroundColor: "red",
+                                            borderRadius: 12,
+                                            width: 22,
+                                            height: 22,
+                                            justifyContent: "center",
+                                            alignItems: "center",
+                                        },
+                                        badgeAnimatedStyle,
+                                    ]}
+                                >
+                                    <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 12 }}>
+                                        {contador}
+                                    </Text>
+                                </Animated.View>
+                            )}
+                        </View>
                     ),
                 }}
             />
+
             <Tab.Screen
                 name="Perfil"
                 children={() => <FadeScreen component={Perfil} />}

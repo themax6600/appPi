@@ -34,7 +34,7 @@ export default function Home({ navigation }) {
       </View>
 
       <View style={styles.cards}>
-        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate("Pedidos")}>
+        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate("Produtos")}>
           <View style={styles.bgMenu}>
             <Image source={menu} style={styles.imgMenu} />
           </View>
