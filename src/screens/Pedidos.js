@@ -1,5 +1,14 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, FlatList, Image, ActivityIndicator, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+  Image,
+  ActivityIndicator,
+  StyleSheet
+} from 'react-native';
+
 import { supabase } from '../../utils/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -10,10 +19,10 @@ export default function PedidosScreen({ navigation }) {
   const [expanded, setExpanded] = useState(null);
 
   useFocusEffect(
-  useCallback(() => {
-    buscarPedidos();
-  }, [])
-);
+    useCallback(() => {
+      buscarPedidos();
+    }, [])
+  );
 
   const buscarPedidos = async () => {
     setLoading(true);
@@ -71,26 +80,44 @@ export default function PedidosScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Pedidos Recentes</Text>
+      <Text style={styles.title}>Meus Pedidos</Text>
 
       <FlatList
         data={pedidos}
         keyExtractor={(item) => item.id_pedido.toString()}
         renderItem={({ item }) => (
           <View style={styles.card}>
+            
+            {/* Cabeçalho */}
             <View style={styles.header}>
-              <Text style={styles.status}>
-                Seu pedido está {item.status_pedido?.toLowerCase()} - R${item.preco_total}
-              </Text>
-              <TouchableOpacity onPress={() => setExpanded(expanded === item.id_pedido ? null : item.id_pedido)}>
+              <View>
+                <Text style={styles.status}>
+                  {item.status_pedido}
+                </Text>
+
+                <Text style={styles.orderInfo}>
+                  Pedido #{item.id_pedido} • Lanchonete {item.id_lanchonete}
+                </Text>
+
+                <Text style={styles.price}>
+                  Total: R$ {item.preco_total}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                onPress={() =>
+                  setExpanded(expanded === item.id_pedido ? null : item.id_pedido)
+                }
+              >
                 <Ionicons
                   name={expanded === item.id_pedido ? 'chevron-up-outline' : 'chevron-down-outline'}
-                  size={26}
+                  size={28}
                   color="#fff"
                 />
               </TouchableOpacity>
             </View>
 
+            {/* Itens */}
             {expanded === item.id_pedido && (
               <View style={styles.itemsContainer}>
                 {item.itens?.length > 0 ? (
@@ -104,17 +131,21 @@ export default function PedidosScreen({ navigation }) {
                         <Text style={styles.itemName}>{i.produto?.nome_produto}</Text>
                         <Text style={styles.itemQuantity}>Qtd: {i.quantidade}</Text>
                         <Text style={styles.itemPrice}>R$ {i.produto?.preco}</Text>
-                        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Produtos")}>
+                        <TouchableOpacity
+                          style={styles.button}
+                          onPress={() => navigation.navigate("Produtos")}
+                        >
                           <Text style={styles.buttonText}>Ver produto</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
                   ))
                 ) : (
-                  <Text style={{ textAlign: 'center', color: '#555' }}>Nenhum item encontrado.</Text>
+                  <Text style={{ textAlign: 'center', color: '#777' }}>Nenhum item encontrado.</Text>
                 )}
               </View>
             )}
+
           </View>
         )}
       />
@@ -125,7 +156,7 @@ export default function PedidosScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F5F6FA',
     paddingTop: 50,
     paddingHorizontal: 16,
   },
@@ -136,68 +167,87 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 15,
   },
+
+  /* ----- CARD DO PEDIDO ----- */
   card: {
-    backgroundColor: '#3b3b3b',
-    borderRadius: 12,
-    marginBottom: 20,
-    padding: 15,
+    backgroundColor: '#1f1f1f',
+    borderRadius: 14,
+    marginBottom: 22,
+    padding: 18,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 5,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
   },
   status: {
-    color: '#fff',
-    fontSize: 16,
+    color: '#FFCC00',
+    fontSize: 17,
+    fontWeight: '600',
   },
+  orderInfo: {
+    color: '#ddd',
+    fontSize: 13,
+    marginTop: 3,
+  },
+  price: {
+    color: '#fff',
+    fontSize: 15,
+    marginTop: 8,
+    fontWeight: 'bold',
+  },
+
+  /* ----- ITENS ----- */
   itemsContainer: {
     backgroundColor: '#fff',
     borderRadius: 15,
-    marginTop: 12,
-    padding: 10,
+    marginTop: 15,
+    padding: 12,
   },
   itemCard: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-    backgroundColor: '#f8f8f8',
-    borderRadius: 15,
+    marginBottom: 12,
+    backgroundColor: '#f1f1f1',
+    borderRadius: 14,
     padding: 10,
   },
   itemImage: {
-    width: 80,
-    height: 80,
+    width: 75,
+    height: 75,
     borderRadius: 10,
-    marginRight: 10,
+    marginRight: 12,
   },
   itemInfo: {
     flex: 1,
   },
   itemName: {
     fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 3,
+    fontWeight: '700',
+    marginBottom: 4,
   },
   itemQuantity: {
     fontSize: 13,
-    color: '#555',
-    marginBottom: 2,
+    color: '#666',
   },
   itemPrice: {
+    marginTop: 2,
     fontSize: 13,
-    color: '#222',
-    marginBottom: 5,
+    fontWeight: '600',
   },
   button: {
     backgroundColor: '#FFCC00',
     paddingVertical: 6,
-    paddingHorizontal: 15,
+    paddingHorizontal: 14,
     borderRadius: 20,
+    marginTop: 8,
     alignSelf: 'flex-start',
   },
   buttonText: {

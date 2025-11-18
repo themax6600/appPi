@@ -105,7 +105,7 @@ export default function TabNavigator() {
 
         setTimeout(() => {
             badgeScale.value = 1.5;
-            badgeScale.value = withSpring(1, { damping: 7, stiffness: 150 });
+            badgeScale.value = withSpring(1, { damping: 3, stiffness: 150 });
         }, 0);
     }, [contador]);
 

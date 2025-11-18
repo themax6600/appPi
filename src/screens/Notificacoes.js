@@ -8,16 +8,27 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import seta from "../../assets/img/seta.png";
 import { supabase } from "../../utils/supabase";
+import { useFocusEffect } from "@react-navigation/native";
+import { useNotificacao } from "../components/NotificacaoContext";
 
 export default function Notificacoes({ navigation }) {
   const [pedidos, setPedidos] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [userId, setUserId] = useState(null);
 
+  // 🔥 Acessa o zerador
+  const { zerarNotificacoes } = useNotificacao();
+
+  // 🔥 ZERA O BADGE ASSIM QUE A TELA GANHA FOCO
+  useFocusEffect(
+    useCallback(() => {
+      zerarNotificacoes(); // Remove o número imediatamente
+    }, [])
+  );
   useEffect(() => {
     async function carregarUsuario() {
       const { data, error } = await supabase.auth.getUser();
