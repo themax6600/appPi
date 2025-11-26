@@ -10,6 +10,8 @@ import {
   Image,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system/legacy';
+
 import { supabase } from '../../utils/supabase';
 
 export default function Perfil() {
@@ -26,8 +28,8 @@ export default function Perfil() {
   const [complemento, setComplemento] = useState('');
   const [userId, setUserId] = useState(null);
   const [carregado, setCarregado] = useState(false);
-  const [fotoUri, setFotoUri] = useState(null); // URI local da foto
-  const [fotoUrl, setFotoUrl] = useState(null); // URL pública no Supabase
+  const [fotoUri, setFotoUri] = useState(null);
+  const [fotoUrl, setFotoUrl] = useState(null);
 
   useEffect(() => {
     const buscarUsuario = async () => {
@@ -35,10 +37,7 @@ export default function Perfil() {
       setCarregado(true);
 
       const { data, error } = await supabase.auth.getUser();
-      if (error) {
-        console.error('Erro ao obter usuário:', error.message);
-        return;
-      }
+      if (error) return;
 
       const user = data?.user;
       if (!user) return;
@@ -46,15 +45,13 @@ export default function Perfil() {
       setEmailAluno(user.email);
       setUserId(user.id);
 
-      const { data: perfilData, error: perfilError } = await supabase
+      const { data: perfilData } = await supabase
         .from('perfil')
         .select('*')
         .eq('id_user', user.id)
         .single();
 
-      if (perfilError) {
-        console.log('Nenhum perfil existente, criando novo.');
-      } else if (perfilData) {
+      if (perfilData) {
         setNome(perfilData.nome || '');
         setDataNascimento(perfilData.data_nascimento || '');
         setTelefone(perfilData.telefone || '');
@@ -72,13 +69,6 @@ export default function Perfil() {
     buscarUsuario();
   }, [carregado]);
 
-  const validarCampos = () => {
-    const limparNumero = (v) => v?.replace(/\D/g, '');
-    if (cpf && limparNumero(cpf)?.length !== 11) return 'CPF inválido.';
-    if (telefone && limparNumero(telefone)?.length < 10) return 'Telefone inválido.';
-    return null;
-  };
-
   const escolherFoto = async () => {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -95,8 +85,7 @@ export default function Perfil() {
       });
 
       if (!result.canceled) {
-        const uri = result.assets[0].uri;
-        setFotoUri(uri);
+        setFotoUri(result.assets[0].uri);
       }
     } catch (err) {
       Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
@@ -107,102 +96,97 @@ export default function Perfil() {
     try {
       if (!uri || !userId) return null;
 
-      const fileExt = uri.split('.').pop();
+      const fileExt = uri.split('.').pop()?.split('?')[0] || 'jpg';
       const fileName = `${userId}.${fileExt}`;
 
-      const response = await fetch(uri);
-      const arrayBuffer = await response.arrayBuffer();
-      const file = new Uint8Array(arrayBuffer);
+      // lê o arquivo como base64
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
 
-      const { error } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('perfil_fotos')
-        .upload(fileName, file, { upsert: true });
+        .upload(fileName, base64, {
+          contentType: `image/${fileExt}`,
+          upsert: true,
+          encoding: 'base64', // ESSENCIAL
+        });
 
-      if (error) {
-        console.log('Erro ao enviar foto:', error.message);
+      if (uploadError) {
+        console.log('ERRO UPLOAD:', uploadError);
         return null;
       }
 
-      const { data: publicData } = supabase.storage
+      const { data } = supabase.storage
         .from('perfil_fotos')
         .getPublicUrl(fileName);
 
-      return publicData.publicUrl;
+      return data.publicUrl;
     } catch (err) {
-      console.log('Erro uploadFoto:', err.message);
+      console.log('Erro uploadFoto:', err);
       return null;
     }
   };
 
   const salvarPerfil = async () => {
-  try {
-    if (!userId) {
-      Alert.alert('Erro', 'Usuário não está logado');
-      return;
+    try {
+      if (!userId) {
+        Alert.alert('Erro', 'Usuário não está logado');
+        return;
+      }
+
+      let fotoPublica = fotoUrl;
+      if (fotoUri) {
+        const url = await uploadFoto(fotoUri);
+        if (url) fotoPublica = url;
+      }
+
+      const limparNumero = (v) => (v ? v.replace(/\D/g, '') : null);
+
+      const perfilData = {
+        id_user: userId,
+        nome: nome || null,
+        email: emailAluno || null,
+        data_nascimento: dataNascimento || null,
+        telefone: limparNumero(telefone) || null,
+        cpf: limparNumero(cpf) || null,
+        cep: limparNumero(cep) || null,
+        estado: estado || null,
+        cidade: cidade || null,
+        rua: rua || null,
+        bairro: bairro || null,
+        complemento: complemento || null,
+        foto: fotoPublica || null,
+      };
+
+      const { error } = await supabase.from('perfil').upsert(perfilData, {
+        onConflict: 'id_user',
+      });
+
+      if (error) Alert.alert('Erro ao salvar perfil', error.message);
+      else {
+        setFotoUrl(fotoPublica);
+        setFotoUri(null);
+        Alert.alert('Sucesso', 'Perfil salvo com sucesso!');
+      }
+    } catch (error) {
+      Alert.alert('Erro inesperado', error.message);
     }
-
-    const erro = validarCampos();
-    if (erro) {
-      Alert.alert('Erro', erro);
-      return;
-    }
-
-    let fotoPublica = fotoUrl;
-    if (fotoUri) {
-      const url = await uploadFoto(fotoUri);
-      if (url) fotoPublica = url;
-    }
-
-    const limparNumero = (valor) => (valor ? valor.replace(/\D/g, '') : null);
-
-    const perfilData = {
-      id_user: userId,
-      nome: nome || null,
-      email: emailAluno || null,
-      data_nascimento: dataNascimento || null,
-      telefone: limparNumero(telefone) || null,
-      cpf: limparNumero(cpf) || null,
-      cep: limparNumero(cep) || null,
-      estado: estado || null,
-      cidade: cidade || null,
-      rua: rua || null,
-      bairro: bairro || null,
-      complemento: complemento || null,
-      foto: fotoPublica || null,
-    };
-
-    const { error } = await supabase.from('perfil').upsert(perfilData, {
-      onConflict: 'id_user',
-    });
-
-    if (error) {
-      Alert.alert('Erro ao salvar perfil', error.message);
-    } else {
-      setFotoUrl(fotoPublica);
-      setFotoUri(null);
-      Alert.alert('Sucesso', 'Perfil salvo com sucesso!');
-    }
-  } catch (error) {
-    Alert.alert('Erro inesperado', error.message);
-  }
-};
-
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={escolherFoto}>
           {fotoUri || fotoUrl ? (
-            <Image
-              source={{ uri: fotoUri || fotoUrl }}
-              style={styles.avatarPlaceholder}
-            />
+            <Image source={{ uri: fotoUri || fotoUrl }} style={styles.avatarPlaceholder} />
           ) : (
             <View style={styles.avatarPlaceholder}>
               <Text style={styles.avatarText}>Foto</Text>
             </View>
           )}
         </TouchableOpacity>
+
         <View style={styles.userInfo}>
           <Text style={styles.name}>{nome || 'Nome do usuário'}</Text>
           <Text style={{ fontSize: 18 }}>
@@ -215,13 +199,7 @@ export default function Perfil() {
       <View style={styles.section}>
         <Input label="Nome Usuário" value={nome} onChangeText={setNome} maxLength={50} />
         <Input label="Email do aluno" value={emailAluno} onChangeText={setEmailAluno} maxLength={60} />
-        <Input
-          label="Data de Nascimento (DD/MM/AAAA)"
-          value={dataNascimento}
-          onChangeText={setDataNascimento}
-          maxLength={10}
-          keyboardType="numeric"
-        />
+        <Input label="Data de Nascimento (DD/MM/AAAA)" value={dataNascimento} onChangeText={setDataNascimento} maxLength={10} keyboardType="numeric" />
         <Input label="Telefone" value={telefone} onChangeText={setTelefone} maxLength={11} keyboardType="numeric" />
         <Input label="CPF" value={cpf} onChangeText={setCpf} maxLength={11} keyboardType="numeric" />
       </View>
@@ -233,9 +211,7 @@ export default function Perfil() {
           style={styles.input}
           placeholder="Estado"
           value={estado}
-          onChangeText={(text) =>
-            setEstado(text.replace(/[^A-Za-z]/g, '').toUpperCase())
-          }
+          onChangeText={(text) => setEstado(text.replace(/[^A-Za-z]/g, '').toUpperCase())}
           maxLength={2}
           autoCapitalize="characters"
           placeholderTextColor="#000"

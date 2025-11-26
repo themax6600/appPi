@@ -126,8 +126,8 @@ export default function TabNavigator() {
                 headerStyle: { backgroundColor: "#004C99" },
                 headerTitle: () => (
                     <View style={{ flexDirection: "row", alignItems: "center" }}>
-                        <Image source={sesc} style={{ marginRight: 10 }} />
-                        <Image source={senac} />
+                        <Image source={sesc} style={{ marginRight: 10, marginBottom: 10}} />
+                        <Image source={senac} style={{ marginBottom: 10, }}/>
                     </View>
                 ),
                 headerTitleAlign: "center",
