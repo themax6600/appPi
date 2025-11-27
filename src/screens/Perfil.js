@@ -91,42 +91,47 @@ export default function Perfil() {
       Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
     }
   };
+const uploadFoto = async (uri) => {
+  try {
+    if (!uri || !userId) return null;
 
-  const uploadFoto = async (uri) => {
-    try {
-      if (!uri || !userId) return null;
+    const fileExt = uri.split('.').pop()?.split('?')[0] || 'jpg';
+    const fileName = `${userId}.${fileExt}`;
 
-      const fileExt = uri.split('.').pop()?.split('?')[0] || 'jpg';
-      const fileName = `${userId}.${fileExt}`;
+    // Lê a imagem como base64
+    const base64 = await FileSystem.readAsStringAsync(uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
 
-      // lê o arquivo como base64
-      const base64 = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.Base64,
+    // Converte base64 para array buffer
+    const binary = atob(base64);
+    const buffer = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      buffer[i] = binary.charCodeAt(i);
+    }
+
+    const { error: uploadError } = await supabase.storage
+      .from('perfil_fotos')
+      .upload(fileName, buffer, {
+        contentType: `image/${fileExt}`,
+        upsert: true,
       });
 
-      const { error: uploadError } = await supabase.storage
-        .from('perfil_fotos')
-        .upload(fileName, base64, {
-          contentType: `image/${fileExt}`,
-          upsert: true,
-          encoding: 'base64', // ESSENCIAL
-        });
-
-      if (uploadError) {
-        console.log('ERRO UPLOAD:', uploadError);
-        return null;
-      }
-
-      const { data } = supabase.storage
-        .from('perfil_fotos')
-        .getPublicUrl(fileName);
-
-      return data.publicUrl;
-    } catch (err) {
-      console.log('Erro uploadFoto:', err);
+    if (uploadError) {
+      console.log("Upload error:", uploadError);
       return null;
     }
-  };
+
+    const { data } = supabase.storage
+      .from("perfil_fotos")
+      .getPublicUrl(fileName);
+
+    return data.publicUrl;
+  } catch (err) {
+    console.log("Erro uploadFoto:", err);
+    return null;
+  }
+};
 
   const salvarPerfil = async () => {
     try {
