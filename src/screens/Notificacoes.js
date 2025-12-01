@@ -20,13 +20,11 @@ export default function Notificacoes({ navigation }) {
   const [carregando, setCarregando] = useState(true);
   const [userId, setUserId] = useState(null);
 
-  // 🔥 Acessa o zerador
   const { zerarNotificacoes } = useNotificacao();
 
-  // 🔥 ZERA O BADGE ASSIM QUE A TELA GANHA FOCO
   useFocusEffect(
     useCallback(() => {
-      zerarNotificacoes(); // Remove o número imediatamente
+      zerarNotificacoes();
     }, [])
   );
   useEffect(() => {

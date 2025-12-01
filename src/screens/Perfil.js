@@ -98,12 +98,10 @@ const uploadFoto = async (uri) => {
     const fileExt = uri.split('.').pop()?.split('?')[0] || 'jpg';
     const fileName = `${userId}.${fileExt}`;
 
-    // Lê a imagem como base64
     const base64 = await FileSystem.readAsStringAsync(uri, {
       encoding: FileSystem.EncodingType.Base64,
     });
 
-    // Converte base64 para array buffer
     const binary = atob(base64);
     const buffer = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) {
