@@ -70,6 +70,56 @@ export default function PedidosScreen({ navigation }) {
     setLoading(false);
   };
 
+  // Função para definir a cor do card de acordo com o status
+  const getStatusColor = (status) => {
+    switch (status.toLowerCase()) {
+      case 'cancelado':
+        return '#FF4D4D'; // vermelho
+      case 'em preparo':
+        return '#FFCC00'; // amarelo
+      case 'entregue':
+        return '#00C851'; // verde
+      case 'pendente':
+      default:
+        return '#1f1f1f'; // preto
+    }
+  };
+
+  // Função para definir a mensagem do pedido
+  const getStatusMessage = (status) => {
+    switch (status.toLowerCase()) {
+      case 'cancelado':
+        return 'Esse pedido foi cancelado';
+      case 'em preparo':
+        return 'Pedido em preparo';
+      case 'entregue':
+        return 'Pedido entregue';
+      case 'pendente':
+      default:
+        return 'Pedido pendente';
+    }
+  };
+
+  // Função para definir o nome da lanchonete
+  const getLanchoneteName = (id) => {
+    switch (id) {
+      case 2:
+        return 'Sesc';
+      case 3:
+        return 'Senac';
+      default:
+        return `Lanchonete ${id}`;
+    }
+  };
+
+  // Função para definir a cor do texto baseado na cor do fundo
+  const getTextColor = (status) => {
+    const bg = getStatusColor(status).toLowerCase();
+    // Se a cor do fundo for muito clara (amarelo), texto preto, senão branco
+    if (bg === '#ffcc00') return '#000';
+    return '#fff';
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -85,69 +135,75 @@ export default function PedidosScreen({ navigation }) {
       <FlatList
         data={pedidos}
         keyExtractor={(item) => item.id_pedido.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            
-            {/* Cabeçalho */}
-            <View style={styles.header}>
-              <View>
-                <Text style={styles.status}>
-                  {item.status_pedido}
-                </Text>
+        renderItem={({ item }) => {
+          const textColor = getTextColor(item.status_pedido);
+          const statusMessage = getStatusMessage(item.status_pedido);
 
-                <Text style={styles.orderInfo}>
-                  Pedido #{item.id_pedido} • Lanchonete {item.id_lanchonete}
-                </Text>
+          return (
+            <View style={[styles.card, { backgroundColor: getStatusColor(item.status_pedido) }]}>
+              
+              {/* Cabeçalho */}
+              <View style={styles.header}>
+                <View>
+                  {/* Status principal agora mostra a mensagem completa */}
+                  <Text style={[styles.status, { color: textColor }]}>
+                    {statusMessage}
+                  </Text>
 
-                <Text style={styles.price}>
-                  Total: R$ {item.preco_total}
-                </Text>
+                  <Text style={[styles.orderInfo, { color: textColor }]}>
+                    Pedido #{item.id_pedido} • {getLanchoneteName(item.id_lanchonete)}
+                  </Text>
+
+                  <Text style={[styles.price, { color: textColor }]}>
+                    Total: R$ {item.preco_total}
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                  onPress={() =>
+                    setExpanded(expanded === item.id_pedido ? null : item.id_pedido)
+                  }
+                >
+                  <Ionicons
+                    name={expanded === item.id_pedido ? 'chevron-up-outline' : 'chevron-down-outline'}
+                    size={28}
+                    color={textColor}
+                  />
+                </TouchableOpacity>
               </View>
 
-              <TouchableOpacity
-                onPress={() =>
-                  setExpanded(expanded === item.id_pedido ? null : item.id_pedido)
-                }
-              >
-                <Ionicons
-                  name={expanded === item.id_pedido ? 'chevron-up-outline' : 'chevron-down-outline'}
-                  size={28}
-                  color="#fff"
-                />
-              </TouchableOpacity>
-            </View>
-
-            {/* Itens */}
-            {expanded === item.id_pedido && (
-              <View style={styles.itemsContainer}>
-                {item.itens?.length > 0 ? (
-                  item.itens.map((i, index) => (
-                    <View key={index} style={styles.itemCard}>
-                      <Image
-                        source={{ uri: i.produto?.image }}
-                        style={styles.itemImage}
-                      />
-                      <View style={styles.itemInfo}>
-                        <Text style={styles.itemName}>{i.produto?.nome_produto}</Text>
-                        <Text style={styles.itemQuantity}>Qtd: {i.quantidade}</Text>
-                        <Text style={styles.itemPrice}>R$ {i.produto?.preco}</Text>
-                        <TouchableOpacity
-                          style={styles.button}
-                          onPress={() => navigation.navigate("Produtos")}
-                        >
-                          <Text style={styles.buttonText}>Ver produto</Text>
-                        </TouchableOpacity>
+              {/* Itens */}
+              {expanded === item.id_pedido && (
+                <View style={styles.itemsContainer}>
+                  {item.itens?.length > 0 ? (
+                    item.itens.map((i, index) => (
+                      <View key={index} style={styles.itemCard}>
+                        <Image
+                          source={{ uri: i.produto?.image }}
+                          style={styles.itemImage}
+                        />
+                        <View style={styles.itemInfo}>
+                          <Text style={styles.itemName}>{i.produto?.nome_produto}</Text>
+                          <Text style={styles.itemQuantity}>Qtd: {i.quantidade}</Text>
+                          <Text style={styles.itemPrice}>R$ {i.produto?.preco}</Text>
+                          <TouchableOpacity
+                            style={styles.button}
+                            onPress={() => navigation.navigate("Produtos")}
+                          >
+                            <Text style={styles.buttonText}>Ver produto</Text>
+                          </TouchableOpacity>
+                        </View>
                       </View>
-                    </View>
-                  ))
-                ) : (
-                  <Text style={{ textAlign: 'center', color: '#777' }}>Nenhum item encontrado.</Text>
-                )}
-              </View>
-            )}
+                    ))
+                  ) : (
+                    <Text style={{ textAlign: 'center', color: '#777' }}>Nenhum item encontrado.</Text>
+                  )}
+                </View>
+              )}
 
-          </View>
-        )}
+            </View>
+          );
+        }}
       />
     </View>
   );
@@ -175,7 +231,6 @@ const styles = StyleSheet.create({
 
   /* ----- CARD DO PEDIDO ----- */
   card: {
-    backgroundColor: '#1f1f1f',
     borderRadius: 14,
     marginBottom: 22,
     padding: 18,
@@ -189,17 +244,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   status: {
-    color: '#FFCC00',
     fontSize: 17,
     fontWeight: '600',
   },
   orderInfo: {
-    color: '#ddd',
     fontSize: 13,
     marginTop: 3,
   },
   price: {
-    color: '#fff',
     fontSize: 15,
     marginTop: 8,
     fontWeight: 'bold',
