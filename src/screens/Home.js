@@ -1,8 +1,6 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import {Image} from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-
-import agenda from "../../assets/img/agenda.png";
-import menu from "../../assets/img/menu.png";
 
 export default function Home({ navigation }) {
   return (
@@ -36,7 +34,7 @@ export default function Home({ navigation }) {
       <View style={styles.cards}>
         <TouchableOpacity style={styles.card} onPress={() => navigation.navigate("Produtos")}>
           <View style={styles.bgMenu}>
-            <Image source={menu} style={styles.imgMenu} />
+            <Image source="https://ofnioamjxvvxfcdnvlev.supabase.co/storage/v1/object/public/imagem/menu.png" style={styles.imgMenu} />
           </View>
           <LinearGradient
             colors={["#80BBFF", "#004C99"]}
@@ -52,7 +50,7 @@ export default function Home({ navigation }) {
         </TouchableOpacity>
         <TouchableOpacity style={styles.card} onPress={() => navigation.navigate("Pedidos")}>
           <View style={styles.bgMenu}>
-            <Image source={agenda} style={styles.imgMenu} />
+            <Image source="https://ofnioamjxvvxfcdnvlev.supabase.co/storage/v1/object/public/imagem/agenda.png" style={styles.imgMenu} />
           </View>
           <LinearGradient
             colors={["#80BBFF", "#004C99"]}

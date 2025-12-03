@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "appPi",
-    "slug": "appPi",
+    "name": "SnackTech Lanchonete",
+    "slug": "snacktechanchonete",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -28,7 +28,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "252eddf9-e2aa-40b9-9c32-c324523cb1f2"
+        "projectId": "73439aa3-ade3-4a29-8804-c1a4946d526e"
       }
     }
   }
